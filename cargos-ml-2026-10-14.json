@@ -1,0 +1,215 @@
+{
+ "mp_porcentaje": 4.302,
+ "productos": [
+  {
+   "producto": "Pack de 5 fotos",
+   "precio": 15000,
+   "categoria": "MLA434385",
+   "proveedor": 0,
+   "queda_web": 14354.7,
+   "clasica": {
+    "total": 5140,
+    "porcentaje": 16,
+    "fijo": 2740,
+    "financiacion": 0,
+    "queda": 9860,
+    "precio_igual_web": 20900,
+    "cargo_a_ese_precio": {
+     "total": 6084,
+     "porcentaje": 16,
+     "fijo": 2740,
+     "financiacion": 0
+    }
+   },
+   "premium": {
+    "total": 7150,
+    "porcentaje": 29.4,
+    "fijo": 2740,
+    "financiacion": 13.4,
+    "queda": 7850,
+    "precio_igual_web": 25900,
+    "cargo_a_ese_precio": {
+     "total": 10934.6,
+     "porcentaje": 29.4,
+     "fijo": 3320,
+     "financiacion": 13.4
+    }
+   }
+  },
+  {
+   "producto": "Pack de 10 fotos",
+   "precio": 25000,
+   "categoria": "MLA434385",
+   "proveedor": 0,
+   "queda_web": 23924.5,
+   "clasica": {
+    "total": 7320,
+    "porcentaje": 16,
+    "fijo": 3320,
+    "financiacion": 0,
+    "queda": 17680,
+    "precio_igual_web": 32900,
+    "cargo_a_ese_precio": {
+     "total": 8584,
+     "porcentaje": 16,
+     "fijo": 3320,
+     "financiacion": 0
+    }
+   },
+   "premium": {
+    "total": 10670,
+    "porcentaje": 29.4,
+    "fijo": 3320,
+    "financiacion": 13.4,
+    "queda": 14330,
+    "precio_igual_web": 33900,
+    "cargo_a_ese_precio": {
+     "total": 9966.6,
+     "porcentaje": 29.4,
+     "fijo": 0,
+     "financiacion": 13.4
+    }
+   }
+  },
+  {
+   "producto": "Pack de 20 fotos",
+   "precio": 39900,
+   "categoria": "MLA434385",
+   "proveedor": 0,
+   "queda_web": 38183.5,
+   "clasica": {
+    "total": 6384,
+    "porcentaje": 16,
+    "fijo": 0,
+    "financiacion": 0,
+    "queda": 33516,
+    "precio_igual_web": 45900,
+    "cargo_a_ese_precio": {
+     "total": 7344,
+     "porcentaje": 16,
+     "fijo": 0,
+     "financiacion": 0
+    }
+   },
+   "premium": {
+    "total": 11730.6,
+    "porcentaje": 29.4,
+    "fijo": 0,
+    "financiacion": 13.4,
+    "queda": 28169.4,
+    "precio_igual_web": 54900,
+    "cargo_a_ese_precio": {
+     "total": 16140.6,
+     "porcentaje": 29.4,
+     "fijo": 0,
+     "financiacion": 13.4
+    }
+   }
+  },
+  {
+   "producto": "Cuadro enmarcado 20x30",
+   "precio": 25900,
+   "categoria": "MLA1635",
+   "proveedor": 17999,
+   "queda_web": 6786.78,
+   "clasica": {
+    "total": 7023.7,
+    "porcentaje": 14.3,
+    "fijo": 3320,
+    "financiacion": 0,
+    "queda": 877.3,
+    "precio_igual_web": 32900,
+    "cargo_a_ese_precio": {
+     "total": 8024.7,
+     "porcentaje": 14.3,
+     "fijo": 3320,
+     "financiacion": 0
+    }
+   },
+   "premium": {
+    "total": 10494.3,
+    "porcentaje": 27.7,
+    "fijo": 3320,
+    "financiacion": 13.4,
+    "queda": -2593.3,
+    "precio_igual_web": 34900,
+    "cargo_a_ese_precio": {
+     "total": 9667.3,
+     "porcentaje": 27.7,
+     "fijo": 0,
+     "financiacion": 13.4
+    }
+   }
+  },
+  {
+   "producto": "Cuadro ecocuero 20x30",
+   "precio": 34900,
+   "categoria": "MLA1635",
+   "proveedor": 25000,
+   "queda_web": 8398.6,
+   "clasica": {
+    "total": 4990.7,
+    "porcentaje": 14.3,
+    "fijo": 0,
+    "financiacion": 0,
+    "queda": 4909.3,
+    "precio_igual_web": 39900,
+    "cargo_a_ese_precio": {
+     "total": 5705.7,
+     "porcentaje": 14.3,
+     "fijo": 0,
+     "financiacion": 0
+    }
+   },
+   "premium": {
+    "total": 9667.3,
+    "porcentaje": 27.7,
+    "fijo": 0,
+    "financiacion": 13.4,
+    "queda": 232.7,
+    "precio_igual_web": 46900,
+    "cargo_a_ese_precio": {
+     "total": 12991.3,
+     "porcentaje": 27.7,
+     "fijo": 0,
+     "financiacion": 13.4
+    }
+   }
+  },
+  {
+   "producto": "Cuadro ecocuero 30x40",
+   "precio": 44900,
+   "categoria": "MLA1635",
+   "proveedor": 32900,
+   "queda_web": 10068.4,
+   "clasica": {
+    "total": 6420.7,
+    "porcentaje": 14.3,
+    "fijo": 0,
+    "financiacion": 0,
+    "queda": 5579.3,
+    "precio_igual_web": 50900,
+    "cargo_a_ese_precio": {
+     "total": 7278.7,
+     "porcentaje": 14.3,
+     "fijo": 0,
+     "financiacion": 0
+    }
+   },
+   "premium": {
+    "total": 12437.3,
+    "porcentaje": 27.7,
+    "fijo": 0,
+    "financiacion": 13.4,
+    "queda": -437.3,
+    "precio_igual_web": 59900,
+    "cargo_a_ese_precio": {
+     "total": 16592.3,
+     "porcentaje": 27.7,
+     "fijo": 0,
+     "financiacion": 13.4
+    }
+   }
+  }
+ ]
+}

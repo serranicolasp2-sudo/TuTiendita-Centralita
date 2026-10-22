@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tutiendita IA · Centro de operaciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/static/estilos.css?v=20261015-diseno2">
+</head>
+<body>
+  <div class="consola">
+    <aside class="lateral">
+      <div class="marca">
+        <svg class="marca-isologo" viewBox="0 0 72 60" aria-hidden="true">
+          <rect x="6" y="8" width="60" height="8" rx="2" fill="#F6F7FA"/>
+          <g fill="#E0435C"><rect x="8" y="16" width="8" height="18"/><circle cx="12" cy="34" r="4"/><rect x="24" y="16" width="8" height="18"/><circle cx="28" cy="34" r="4"/><rect x="40" y="16" width="8" height="18"/><circle cx="44" cy="34" r="4"/><rect x="56" y="16" width="8" height="18"/><circle cx="60" cy="34" r="4"/></g>
+          <g fill="#F6F7FA"><rect x="16" y="16" width="8" height="18"/><circle cx="20" cy="34" r="4"/><rect x="32" y="16" width="8" height="18"/><circle cx="36" cy="34" r="4"/><rect x="48" y="16" width="8" height="18"/><circle cx="52" cy="34" r="4"/></g>
+          <rect x="43" y="37" width="24" height="17" rx="8.5" fill="#FFD23F"/>
+          <text x="55" y="49" text-anchor="middle" font-size="11" font-weight="800" fill="#1A1712">IA</text>
+        </svg>
+        <span class="marca-texto"><b>tutiendita <i>IA</i></b><small>Centro de operaciones</small></span>
+      </div>
+
+      <nav class="nav" aria-label="Secciones de la centralita">
+        <div class="nav-grupo" aria-labelledby="nav-operacion">
+          <h2 id="nav-operacion">Trabajo diario</h2>
+          <button type="button" data-vista="hoy" aria-current="page">Para hacer hoy <span class="cuenta" id="cuenta-hoy">0</span></button>
+          <button type="button" data-vista="pedidos">Pedidos</button>
+        </div>
+        <div class="nav-grupo" aria-labelledby="nav-dinero">
+          <h2 id="nav-dinero">Dinero</h2>
+          <button type="button" data-vista="plata">Cobros y comisiones</button>
+          <button type="button" data-vista="costos">Costos por venta</button>
+          <button type="button" data-vista="precios">Precios</button>
+        </div>
+        <div class="nav-grupo" aria-labelledby="nav-negocio">
+          <h2 id="nav-negocio">Seguimiento del negocio</h2>
+          <button type="button" data-vista="proveedores">Proveedores</button>
+          <button type="button" data-vista="clientes">Clientes</button>
+          <button type="button" data-vista="fechas">Recordatorios</button>
+          <button type="button" data-vista="ml-meta">Mercado Libre y Meta</button>
+        </div>
+        <div class="nav-grupo nav-grupo--sistema" aria-labelledby="nav-sistema">
+          <h2 id="nav-sistema">Estado</h2>
+          <button type="button" data-vista="sistema">Estado del sistema</button>
+        </div>
+      </nav>
+
+      <div class="lateral-pie">
+        <span class="punto"></span>
+        <span><b>Aplicación local</b><small>Datos reales · 127.0.0.1</small></span>
+      </div>
+    </aside>
+
+    <div class="zona">
+      <header class="barra">
+        <div class="barra-titulo">
+          <span class="barra-etiqueta">OPERACIONES</span>
+          <span>Tu Canción <i>·</i> Restauración de fotos</span>
+        </div>
+        <span class="real"><span class="punto"></span> Conexión local</span>
+      </header>
+      <div class="abiertos" id="abiertos" role="tablist" aria-label="Archivos abiertos" hidden></div>
+      <main class="principal" id="principal" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div class="tostadas" id="tostadas" aria-live="polite"></div>
+
+  <div id="modal-contenedor"></div>
+
+  <script src="/static/app.js?v=20261015-diseno2"></script>
+</body>
+</html>

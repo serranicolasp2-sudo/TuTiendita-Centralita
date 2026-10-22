@@ -1,0 +1,1252 @@
+<title>Centralita tutienditaia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: consola de operaciones de una sola persona, en la PC. Navegación fija a la izquierda, una fila de pestañas
+   con los archivos abiertos y el tablero o el archivo debajo. Lo que necesita tu mano va siempre primero. */
+:root {
+  --papel: #F6F7FA;
+  --hoja: #FFFFFF;
+  --tinta: #1A1712;
+  --tinta-2: #5A5B6B;
+  --linea: #DCE0EB;
+  --birome: #1E3C96;
+  --sobre-birome: #FFFFFF;
+  --birome-suave: #E6ECFA;
+  --yema: #FFD23F;
+  --sobre-yema: #1A1712;
+  --malvon: #E0435C;
+  --ok: #1D7A4C; --ok-bg: #E2F3E9;
+  --aviso: #8F5300; --aviso-bg: #FFF0D2;
+  --critico: #B42318; --critico-bg: #FDE6E3;
+  --sombra: 0 1px 2px rgba(26, 23, 18, .06), 0 4px 14px rgba(30, 60, 150, .06);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-texto: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-dato: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --papel: #111219; --hoja: #1A1B25; --tinta: #EEEEF4; --tinta-2: #A4A6B8; --linea: #2D2F3E;
+    --birome: #8FA7FF; --sobre-birome: #0D1430; --birome-suave: #1D2647; --malvon: #FF7489;
+    --ok: #63D49E; --ok-bg: #16301F; --aviso: #F3B54A; --aviso-bg: #36290F; --critico: #FF8073; --critico-bg: #3B1916;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --papel: #111219; --hoja: #1A1B25; --tinta: #EEEEF4; --tinta-2: #A4A6B8; --linea: #2D2F3E;
+  --birome: #8FA7FF; --sobre-birome: #0D1430; --birome-suave: #1D2647; --malvon: #FF7489;
+  --ok: #63D49E; --ok-bg: #16301F; --aviso: #F3B54A; --aviso-bg: #36290F; --critico: #FF8073; --critico-bg: #3B1916;
+  --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--papel); color: var(--tinta); font: 15px/1.5 var(--f-texto); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h2 { font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+h3 { font-size: 17px; font-weight: 700; }
+p { margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--malvon); outline-offset: 2px; }
+.dato { font-family: var(--f-dato); font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+.suave { color: var(--tinta-2); }
+.negativo { color: var(--critico); font-weight: 700; }
+.etiqueta { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-2); }
+
+/* ---------- barra superior ---------- */
+.barra { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--hoja); border-bottom: 1px solid var(--linea);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 20px; }
+.marca { display: flex; align-items: baseline; gap: 8px; margin-right: auto; }
+.marca b { font-family: var(--f-display); font-weight: 800; font-size: 20px; letter-spacing: -.02em; }
+.marca span { font-family: var(--f-dato); font-size: 12px; color: var(--tinta-2); }
+.ejemplo { font-size: 12px; font-weight: 600; background: var(--yema); color: var(--sobre-yema); padding: 3px 9px; border-radius: 99px; }
+.real { font-size: 12px; font-weight: 600; background: var(--ok-bg); color: var(--ok); padding: 3px 9px; border-radius: 99px; }
+.modo { display: inline-flex; border: 1px solid var(--linea); border-radius: 99px; padding: 3px; background: var(--papel); }
+.modo button { border: 0; background: transparent; padding: 6px 14px; border-radius: 99px; font-weight: 600; min-height: 36px; }
+.modo button[aria-pressed="true"] { background: var(--tinta); color: var(--papel); }
+
+/* ---------- consola ---------- */
+.consola { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: calc(100vh - 60px); }
+.nav { border-right: 1px solid var(--linea); padding: 18px 12px; display: flex; flex-direction: column; gap: 2px; background: var(--hoja); }
+.nav button { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 0; background: transparent;
+  text-align: left; padding: 9px 12px; border-radius: 8px; font-weight: 500; min-height: 40px; color: var(--tinta-2); }
+.nav button:hover { background: var(--papel); color: var(--tinta); }
+.nav button[aria-current="page"] { background: var(--birome-suave); color: var(--birome); font-weight: 700; }
+.nav .cuenta { font-family: var(--f-dato); font-size: 12px; background: var(--critico); color: var(--hoja); border-radius: 99px; padding: 0 7px; }
+.nav hr { border: 0; border-top: 1px solid var(--linea); margin: 10px 4px; }
+.nav .futuro { opacity: .75; }
+.zona { min-width: 0; display: grid; grid-template-rows: auto 1fr; }
+.principal { padding-block: 24px 48px; padding-inline: 28px; min-width: 0; display: grid; gap: 22px; align-content: start; }
+.cabeza { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px; }
+
+/* ---------- pestañas de archivos abiertos ---------- */
+.abiertos { display: flex; gap: 2px; overflow-x: auto; background: var(--hoja); border-bottom: 1px solid var(--linea); padding: 6px 12px 0; }
+.abiertos .pest { display: flex; align-items: center; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0; flex: none; }
+.abiertos .pest[aria-selected="true"] { background: var(--papel); border-color: var(--linea); }
+.abiertos .pest > button { border: 0; background: transparent; padding: 8px 10px; min-height: 38px; font-size: 13px; display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+.abiertos .pest .cerrar { padding: 8px 9px; color: var(--tinta-2); }
+.abiertos .pest .cerrar:hover { color: var(--critico); }
+.abiertos .sucio { width: 8px; height: 8px; border-radius: 99px; background: var(--malvon); display: inline-block; }
+.abiertos .pid { font-family: var(--f-dato); font-size: 11px; color: var(--tinta-2); }
+
+/* ---------- piezas comunes ---------- */
+.panel { background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); padding: 18px; min-width: 0; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.chip.rf { background: var(--yema); color: var(--sobre-yema); }
+.chip.tc { background: var(--birome); color: var(--sobre-birome); }
+.pill { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 6px; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.aviso { background: var(--aviso-bg); color: var(--aviso); }
+.pill.critico { background: var(--critico-bg); color: var(--critico); }
+.pill.info { background: var(--birome-suave); color: var(--birome); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 8px;
+  border: 1px solid var(--linea); background: var(--hoja); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.btn:hover { border-color: var(--tinta-2); }
+.btn[disabled] { opacity: .45; cursor: default; }
+.btn.fuerte { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+.btn.azul { background: var(--birome); color: var(--sobre-birome); border-color: var(--birome); }
+.btn.chico { min-height: 32px; padding: 0 10px; font-size: 13px; }
+.fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grilla-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 14px; }
+.cifra { font-family: var(--f-display); font-weight: 800; font-size: 30px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.nota-ej { font-size: 12px; color: var(--tinta-2); }
+.enlace { color: var(--birome); font-weight: 600; text-underline-offset: 2px; }
+
+/* ---------- mención de un archivo: el nombre lo abre acá; la carpeta, en el Explorador ---------- */
+.archivo { display: inline-flex; align-items: center; vertical-align: baseline; border: 1px solid var(--linea); border-radius: 6px; background: var(--papel); max-width: 100%; }
+.archivo button { border: 0; background: transparent; padding: 1px 6px; font-family: var(--f-dato); font-size: 12.5px; color: var(--birome); min-height: 26px; }
+.archivo .abrir-a { text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; text-align: left; }
+.archivo .en-carpeta { border-left: 1px solid var(--linea); color: var(--tinta-2); display: inline-flex; align-items: center; }
+.archivo .en-carpeta:hover { color: var(--birome); }
+.archivo svg { width: 15px; height: 15px; }
+
+/* ---------- avisos de Hoy ---------- */
+.alertas { display: grid; gap: 10px; }
+.alerta { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; gap: 0 14px; align-items: center; background: var(--hoja);
+  border: 1px solid var(--linea); border-radius: var(--r); overflow: hidden; }
+.alerta::before { content: ""; align-self: stretch; background: var(--aviso); }
+.alerta.critico::before { background: var(--critico); }
+.alerta.info::before { background: var(--birome); }
+.alerta > div { padding: 12px 0; min-width: 0; display: grid; gap: 3px; }
+.alerta > .btn { margin-right: 14px; }
+
+/* ---------- plazos ---------- */
+.plazo { display: grid; gap: 4px; }
+.plazo .riel { height: 6px; background: var(--linea); border-radius: 99px; overflow: hidden; }
+.plazo .riel i { display: block; height: 100%; border-radius: 99px; background: var(--ok); }
+.plazo.aviso .riel i { background: var(--aviso); }
+.plazo.critico .riel i { background: var(--critico); }
+.plazo small { font-size: 12px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+
+/* ---------- tablero de pedidos ---------- */
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filtros button { border: 1px solid var(--linea); background: var(--hoja); border-radius: 99px; padding: 6px 14px; min-height: 36px; font-weight: 600; }
+.filtros button[aria-pressed="true"] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+.filtros input { flex: 1 1 200px; min-width: 0; max-width: 320px; min-height: 36px; padding: 6px 12px; border: 1px solid var(--linea); border-radius: 99px; background: var(--hoja); }
+.columnas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.columna { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.columna header { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px; }
+.columna header h3 { font-size: 15px; }
+.columna.turno header h3 { color: var(--critico); }
+.tarjeta { text-align: left; width: 100%; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); padding: 12px;
+  display: grid; gap: 8px; box-shadow: var(--sombra); }
+.tarjeta:hover { border-color: var(--birome); }
+.tarjeta .arriba { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.tarjeta .falta { font-size: 14px; }
+.vacia { font-size: 13px; color: var(--tinta-2); border: 1px dashed var(--linea); border-radius: var(--r); padding: 14px; text-align: center; }
+
+/* ---------- ficha del pedido ---------- */
+.volver { justify-self: start; border: 0; background: transparent; color: var(--birome); font-weight: 600; padding: 0; min-height: 32px; }
+.ficha { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--linea); overflow-x: auto; }
+.pestanas button { border: 0; background: transparent; padding: 10px 14px; font-weight: 600; color: var(--tinta-2); border-bottom: 3px solid transparent; white-space: nowrap; min-height: 44px; }
+.pestanas button[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--malvon); }
+.datos { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; }
+.datos dt { color: var(--tinta-2); font-size: 13px; }
+.datos dd { margin: 0; }
+.linea-tiempo { list-style: none; margin: 0; padding: 0; display: grid; }
+.linea-tiempo li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linea); }
+.linea-tiempo li:last-child { border-bottom: 0; }
+.linea-tiempo time { font-family: var(--f-dato); font-size: 12px; color: var(--tinta-2); padding-top: 2px; }
+.archivos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.archivos li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--linea); border-radius: 8px; flex-wrap: wrap; }
+.soltar { display: grid; gap: 6px; place-items: center; text-align: center; border: 2px dashed var(--birome); border-radius: var(--r); padding: 22px 14px;
+  background: var(--birome-suave); color: var(--birome); cursor: pointer; }
+.soltar.encima { background: var(--birome); color: var(--sobre-birome); }
+.soltar strong { font-family: var(--f-display); font-size: 18px; }
+.resultado-audio { display: grid; gap: 8px; }
+audio { width: 100%; }
+.campo { display: grid; gap: 6px; }
+.campo label { font-weight: 600; font-size: 14px; }
+.campo input, .campo textarea, .campo select { width: 100%; padding: 9px 12px; border: 1px solid var(--linea); border-radius: 8px; background: var(--papel); min-height: 40px; }
+.marca-check { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; min-height: 40px; }
+.marca-check input { width: 18px; height: 18px; }
+.sugerencia { font-size: 14px; background: var(--aviso-bg); color: var(--aviso); border-radius: 8px; padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.acciones-lista { display: grid; gap: 16px; }
+.acciones-lista section { display: grid; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid var(--linea); }
+.acciones-lista section:last-child { border-bottom: 0; padding-bottom: 0; }
+
+/* ---------- visor de archivos ---------- */
+.visor { display: grid; gap: 14px; }
+.visor-cab { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; }
+.ruta { font-family: var(--f-dato); font-size: 12.5px; color: var(--tinta-2); overflow-wrap: anywhere; }
+.editor { width: 100%; min-height: 52vh; resize: vertical; font-family: var(--f-dato); font-size: 13.5px; line-height: 1.6; padding: 14px 16px;
+  border: 1px solid var(--linea); border-radius: var(--r); background: var(--hoja); tab-size: 2; }
+.lectura { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-dato); font-size: 13.5px; line-height: 1.6; padding: 14px 16px;
+  border: 1px solid var(--linea); border-radius: var(--r); background: var(--hoja); max-height: 60vh; overflow: auto; }
+.que-pasa { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r); background: var(--birome-suave); color: var(--birome); font-size: 14px; }
+.que-pasa.ok { background: var(--ok-bg); color: var(--ok); }
+.que-pasa.aviso { background: var(--aviso-bg); color: var(--aviso); }
+.foto { display: grid; place-items: center; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); padding: 14px; overflow: auto; }
+.foto img { max-width: 100%; height: auto; border-radius: 4px; }
+.foto.real-tam img { max-width: none; width: 900px; }
+.comparar { position: relative; width: min(640px, 100%); aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; border: 1px solid var(--linea); }
+.comparar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.comparar .tapa { clip-path: inset(0 50% 0 0); }
+.comparar .raya { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--yema); }
+.comparar span { position: absolute; top: 8px; font-size: 12px; font-weight: 700; background: var(--tinta); color: var(--papel); padding: 2px 8px; border-radius: 6px; }
+.comparar .izq { left: 8px; } .comparar .der { right: 8px; }
+
+/* ---------- plata, costos y proveedores ---------- */
+.tabla-caja { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--linea); white-space: nowrap; vertical-align: middle; }
+th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--tinta-2); font-weight: 600; }
+td.num, th.num { text-align: right; }
+tfoot td { font-weight: 700; border-bottom: 0; }
+.grafico svg { width: 100%; height: auto; display: block; }
+.grafico text { fill: var(--tinta-2); font-family: var(--f-dato); font-size: 11px; }
+.grafico .barra-ok { fill: var(--birome); }
+.grafico .barra-ult { fill: var(--malvon); }
+.grafico line { stroke: var(--linea); }
+.dos { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.lista-simple { list-style: none; margin: 0; padding: 0; display: grid; }
+.lista-simple li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--linea); flex-wrap: wrap; }
+.lista-simple li:last-child { border-bottom: 0; }
+.lista-simple .resta { color: var(--critico); }
+.lista-simple .sin { color: var(--tinta-2); font-style: italic; }
+.lista-simple .total { font-weight: 700; font-size: 16px; }
+.fuentes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fuentes li { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; }
+.fuentes b { font-size: 14px; }
+.canal { font-size: 12px; font-weight: 600; }
+.chispa { width: 96px; height: 26px; display: block; }
+.chispa polyline { fill: none; stroke: var(--birome); stroke-width: 1.6; }
+.chispa circle { fill: var(--malvon); }
+.corregir { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--birome); border-radius: var(--r); background: var(--birome-suave); }
+.aprobar { display: grid; gap: 10px; padding: 14px 16px; border-radius: var(--r); background: var(--aviso-bg); color: var(--aviso); }
+.aprobar .btn { color: var(--tinta); }
+.aprobar .btn.fuerte { color: var(--papel); }
+.hallazgos { display: grid; gap: 8px; margin: 0; padding-left: 20px; }
+
+/* ---------- sistema ---------- */
+.estado { display: grid; gap: 6px; }
+.estado .cab { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.punto { width: 9px; height: 9px; border-radius: 99px; background: var(--ok); display: inline-block; margin-right: 6px; }
+
+/* ---------- plan ---------- */
+.plan { max-width: 980px; margin: 0 auto; padding-block: 28px 64px; padding-inline: 20px; display: grid; gap: 34px; }
+.plan .intro { display: grid; gap: 12px; }
+.plan .intro h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -.02em; }
+.plan .intro p { font-size: 17px; max-width: 62ch; }
+.plan section { display: grid; gap: 14px; }
+.plan p, .plan li { max-width: 72ch; }
+.mapa td { white-space: normal; }
+.mapa table { min-width: 560px; }
+.fases { display: grid; gap: 12px; }
+.fase { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); padding: 16px; }
+.fase .n { font-family: var(--f-display); font-weight: 800; font-size: 30px; color: var(--birome); line-height: 1; }
+.fase ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.decisiones { display: grid; gap: 10px; }
+.decision { background: var(--hoja); border: 1px solid var(--linea); border-left: 4px solid var(--malvon); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 4px; }
+.decision.hecha { border-left-color: var(--ok); }
+pre.mermaid { background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--r); padding: 16px; overflow-x: auto; margin: 0; }
+code { font-family: var(--f-dato); font-size: 13px; background: var(--birome-suave); color: var(--birome); padding: 1px 5px; border-radius: 4px; }
+
+/* ---------- avisos flotantes ---------- */
+.tostadas { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; z-index: 20; max-width: min(440px, calc(100vw - 32px)); }
+.tostada { background: var(--tinta); color: var(--papel); padding: 12px 14px; border-radius: 10px; box-shadow: var(--sombra); font-size: 14px; }
+
+/* ---------- pantallas angostas ---------- */
+@media (max-width: 1080px) {
+  .columnas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ficha, .dos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .barra { padding: 10px 16px; }
+  .consola { grid-template-columns: minmax(0, 1fr); }
+  .nav { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--linea); padding: 8px 12px; gap: 4px; }
+  .nav button { white-space: nowrap; flex: none; }
+  .nav hr { display: none; }
+  .principal { padding-inline: 16px; padding-block: 18px 40px; }
+  .columnas { grid-template-columns: minmax(0, 1fr); }
+  .linea-tiempo li, .fuentes li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .fase { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .datos { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
+  .datos dd { margin-bottom: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tostada { animation: entra .2s ease-out; }
+  @keyframes entra { from { transform: translateY(8px); opacity: .4; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+<header class="barra">
+  <div class="marca"><b>Centralita</b><span>tutienditaia · propuesta</span></div>
+  <span class="ejemplo">Pedidos de ejemplo</span>
+  <span class="real">Comisiones reales · ML y MP, 14/10</span>
+  <div class="modo" role="group" aria-label="Qué ver">
+    <button type="button" id="ver-prototipo" aria-pressed="true">Prototipo</button>
+    <button type="button" id="ver-plan" aria-pressed="false">Plan</button>
+  </div>
+</header>
+
+<div id="prototipo" class="consola">
+  <nav class="nav" aria-label="Secciones">
+    <button type="button" data-vista="hoy">Hoy <span class="cuenta" id="cuenta-hoy">0</span></button>
+    <button type="button" data-vista="pedidos">Pedidos</button>
+    <button type="button" data-vista="plata">Plata</button>
+    <button type="button" data-vista="costos">Costos por venta</button>
+    <button type="button" data-vista="proveedores">Proveedores</button>
+    <button type="button" data-vista="sistema">Sistema</button>
+    <hr>
+    <button type="button" data-vista="futuro" class="futuro">Mercado Libre y Meta</button>
+  </nav>
+  <div class="zona">
+    <div class="abiertos" id="abiertos" role="tablist" aria-label="Archivos abiertos" hidden></div>
+    <main class="principal" id="principal" tabindex="-1"></main>
+  </div>
+</div>
+
+<div id="plan" class="plan" hidden>
+  <div class="intro">
+    <p class="etiqueta">Propuesta · actualizada el 14/10/2026</p>
+    <h1>Una sola pantalla para manejar la tienda</h1>
+    <p>Hoy el trabajo está repartido entre los avisos del celular, las carpetas de <code>C:\Pedidos</code>, el bot, Mercado Pago y el servidor. La centralita junta todo: qué pedido necesita tu mano, cuánto falta para cada plazo, qué archivos tiene cada pedido, cuánto entró, cuánto te queda después de Mercado Libre y los proveedores, y cuándo se libera la plata.</p>
+  </div>
+
+  <section>
+    <h2>Lo que dicen las comisiones reales</h2>
+    <p>Leídas el 14/10 de tus pagos de Mercado Pago y de la API de Mercado Libre, con tu app autorizada. En la centralita se actualizan solas; lo que la API no informa aparece como "sin dato".</p>
+    <ul class="hallazgos">
+      <li><b>Mercado Pago cobró 4,30 %</b> en tus 6 pagos (todos con dinero en cuenta) y libera la plata <b>18 días</b> después. Con tarjeta todavía no hubo pagos.</li>
+      <li><b>El cuadro enmarcado a $25.900 casi no deja nada en ML:</b> en Clásica (14,3 % + $3.320 fijo) te quedan $877 antes del envío; en Premium perdés $2.593. Para ganar lo mismo que en tu web hay que publicarlo a $32.900 en Clásica.</li>
+      <li><b>El ecocuero 30x40 pierde plata en Premium</b> (−$437 a $44.900). En Clásica deja $5.579; iguala a tu web en $50.900.</li>
+      <li><b>Las restauraciones digitales van en la categoría Fotos:</b> 16 % en Clásica, con costo fijo hasta $33.000 aproximadamente ($2.740 a $15.000; $3.320 a $25.000).</li>
+      <li><b>La canción no tiene categoría en ML:</b> la API sugiere Libros o Souvenirs. No se calcula hasta definir dónde publicarla.</li>
+      <li><b>El vigilante del servidor calcula los precios con 8 % de comisión de MP</b> (regla D-15). La real fue 4,30 %: hoy te queda más de lo que apunta la regla. Conviene esperar a ver pagos con tarjeta antes de cambiarla.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Dónde corre y cómo se conecta</h2>
+    <p><b>En tu PC</b>, al lado del bot. Se abre desde un ícono del escritorio en una ventana propia, como un programa, y solo funciona en tu PC. Un pequeño servicio local hace lo que el navegador no puede: abrir el Explorador con un archivo seleccionado, leer y guardar los archivos de los pedidos, avisarle al bot y consultar la API de Mercado Libre con tu app ya autorizada. Lo de la tienda (pedidos, mails, reenvíos, proveedores) lo pide al servidor con la misma llave que usa el bot, y el servidor consulta a Mercado Pago.</p>
+    <pre class="mermaid">
+flowchart LR
+  subgraph PC["Tu PC"]
+    C["Centralita (ventana propia)"]
+    L["Servicio local"]
+    B["Bot: Codex + Claude"]
+    P[("Carpetas RF y TC")]
+    E["Explorador de Windows"]
+    C --- L
+    L -->|leer, guardar, avisar al bot| P
+    L -->|mostrar en la carpeta| E
+    B --- P
+  end
+  subgraph S["Servidor de la tienda"]
+    A["API de administración"]
+    V["Vigilante de proveedores"]
+    A --- V
+  end
+  L &lt;--&gt;|estados, mails, reenvíos, precios| A
+  B &lt;--&gt;|vistas previas y entregas| A
+  A &lt;--&gt;|cobros, comisiones, liberaciones| MP["Mercado Pago"]
+  V --&gt;|lee cada 30 min| PR["Publicaciones de proveedores"]
+  L &lt;--&gt;|cargos reales por venta y por precio| ML["API de Mercado Libre"]
+  L -.->|fase 4| META["Meta Ads"]
+    </pre>
+  </section>
+
+  <section class="mapa">
+    <h2>Lo que pediste, y dónde está</h2>
+    <div class="tabla-caja panel" style="padding:0">
+      <table>
+        <thead><tr><th>Pediste</th><th>En la centralita</th></tr></thead>
+        <tbody>
+          <tr><td>Seguir los estados de los pedidos</td><td><b>Pedidos</b>: cuatro columnas (tu turno, el bot trabajando, esperando al cliente, entregados) con el plazo de cada uno. <b>Hoy</b> muestra solo lo urgente.</td></tr>
+          <tr><td>Correcciones a mano y peticiones</td><td>En cada pedido, <b>Acciones</b>: instrucción para que el bot rehaga, dar un cambio extra sin costo, reenviar la vista previa o la entrega, corregir el mail o el WhatsApp.</td></tr>
+          <tr><td>Adjuntar los audios de prueba con cualquier nombre</td><td>En <b>Archivos</b> soltás el MP3 que bajó Suno: se renombra (<code>v2-previa.mp3</code> o <code>Tu canción para Mirta.mp3</code>), se guarda en su carpeta y el bot lo sube solo.</td></tr>
+          <tr><td>Clic en un archivo: abrir la carpeta con el archivo seleccionado</td><td>Cada archivo que aparece (en el historial, en "Qué falta", en Archivos) tiene el ícono de carpeta: abre el Explorador de Windows ahí, con el archivo marcado.</td></tr>
+          <tr><td>Leer y editar archivos en el mismo programa, avisando al bot</td><td>El nombre del archivo lo abre en una pestaña: textos editables (letras, <code>suno.txt</code>), fotos con comparador antes/después, audios y el análisis de cada foto. Al guardar te dice qué hace el bot: si editaste la letra actual, la usa de base; si cambiaste una foto por tu retoque, rearma la final y la vista previa. Queda en el historial.</td></tr>
+          <tr><td>Precio, costos reales de ML y tercerizados, si se cobró, cuándo se libera</td><td><b>Plata</b> y <b>Costos por venta</b>, con comisiones reales: Mercado Pago (de tus pagos) y Mercado Libre (de su API: cargo de cada venta, y cargo a cualquier precio para simular). Proveedor del cuadro y envío. Lo que no informa la API, "sin dato".</td></tr>
+          <tr><td>Revisar a mano los precios de los proveedores tercerizados</td><td><b>Proveedores</b>: revisar una publicación o todas en el momento, abrirla en ML, corregir el precio a mano si el vigilante no pudo leerlo, aprobar o rechazar los cambios de más de 40 % y ver cómo fue cambiando cada precio.</td></tr>
+          <tr><td>Más adelante: publicaciones de ML y campañas de Meta</td><td>Una sección para cada una, cruzada con las ventas (por ejemplo, cuánto costó cada venta de una campaña).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Orden en que se construye</h2>
+    <div class="fases">
+      <div class="fase"><span class="n">1</span><div><h3>Pedidos y archivos</h3><ul>
+        <li>Hoy, tablero de pedidos y ficha de cada pedido con su historial.</li>
+        <li>Archivos clicables: abrir en una pestaña o mostrar en la carpeta.</li>
+        <li>Visor y editor de textos, fotos y audios, con aviso al bot al guardar.</li>
+        <li>Soltar audios (previa y final) con renombre automático.</li>
+        <li>Acciones: instrucción para rehacer, cambio extra, reenviar, corregir mail o WhatsApp.</li>
+      </ul></div></div>
+      <div class="fase"><span class="n">2</span><div><h3>Plata y costos reales</h3><ul>
+        <li>Por pedido: comisión, neto y fecha de liberación que informa Mercado Pago.</li>
+        <li>Ventas de ML con el cargo que informa ML en cada venta, más el proveedor del cuadro.</li>
+        <li>Simulador con la API de precios de ML: cargo a cualquier precio, categoría y tipo de publicación.</li>
+      </ul></div></div>
+      <div class="fase"><span class="n">3</span><div><h3>Proveedores, clientes y sistema</h3><ul>
+        <li>Revisión manual de los precios de los proveedores: revisar ahora, corregir a mano y aprobar cambios grandes.</li>
+        <li>Cuadros por comprar, con número de seguimiento y aviso al cliente.</li>
+        <li>Clientes que vuelven a comprar y fechas para recordarles (con su permiso).</li>
+        <li>Estado del bot, Codex y Claude, con botón para reiniciar el bot.</li>
+      </ul></div></div>
+      <div class="fase"><span class="n">4</span><div><h3>Mercado Libre y Meta</h3><ul>
+        <li>Publicaciones de ML: precio, visitas y preguntas sin responder (la app de ML ya está autorizada).</li>
+        <li>Campañas de Meta: gasto, ventas y costo por venta (hace falta conectar una cuenta publicitaria).</li>
+      </ul></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Lo que hay que sumar al servidor</h2>
+    <p>Pocas cosas, y las sube Antigravity como siempre:</p>
+    <ul>
+      <li>Corregir el mail o el WhatsApp de un pedido y reenviar el último mensaje (hoy un mail mal escrito no se puede arreglar).</li>
+      <li>Dar un cambio extra sin costo, como el de RF-0010.</li>
+      <li>Datos de cada cobro de Mercado Pago: comisión, neto y fecha de liberación.</li>
+      <li>Guardar el número de seguimiento del cuadro y avisarle al cliente.</li>
+      <li>Proveedores: la lista con la última lectura y su historial de precios, cargar un precio a mano y aprobar o rechazar un cambio grande. Revisar ahora ya existe (<code>/admin/vigilante</code>).</li>
+    </ul>
+    <p>Lo de Mercado Libre no pasa por el servidor: lo consulta el servicio de tu PC con la app que ya autorizaste.</p>
+  </section>
+
+  <section>
+    <h2>Decisiones</h2>
+    <div class="decisiones">
+      <div class="decision hecha"><h3>Corre en la PC</h3><p>Decidido el 14/10. Ventana propia, solo en tu PC.</p></div>
+      <div class="decision hecha"><h3>Costos: solo reales</h3><p>Decidido el 14/10. Mercado Pago de tus pagos y Mercado Libre de su API, más el proveedor tercerizado. Lo que no informan las APIs se muestra como "sin dato", nunca estimado.</p></div>
+      <div class="decision"><h3>Envío de los cuadros vendidos por ML</h3><p>Para calcularlo, la API de ML necesita medida y peso del cuadro embalado. Además hay que definir cómo se despacha si lo envía el proveedor.</p></div>
+      <div class="decision"><h3>¿Arrancamos por la fase 1?</h3><p>Es la que más tiempo te ahorra en el día a día. Las otras se suman sin rehacer nada.</p></div>
+    </div>
+  </section>
+</div>
+
+<div class="tostadas" id="tostadas" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var AHORA = Date.now(), M = 60e3, H = 3600e3, D = 24 * H;
+  function hace(horas) { return AHORA - horas * H; }
+  var pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  function $(n) { return pesos.format(Math.round(n)); }
+  function pct(n) { return (Math.round(n * 100) / 100).toString().replace(".", ",") + " %"; }
+  function dosDig(n) { return ("0" + n).slice(-2); }
+  function fecha(t) { var d = new Date(t); return dosDig(d.getDate()) + "/" + dosDig(d.getMonth() + 1); }
+  function hora(t) { var d = new Date(t); return fecha(t) + " " + dosDig(d.getHours()) + ":" + dosDig(d.getMinutes()); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  // ---------------- comisiones REALES, leídas el 14/10/2026 ----------------
+  // Mercado Pago: lo que cobró en los 6 pagos reales de la tienda (todos con dinero en cuenta): 21,51 de cada 500, y libera a los 18 días.
+  // Mercado Libre: API listing_prices en la categoría que sugiere ML para cada producto (domain_discovery), al precio de tu web.
+  // "igual": primer precio terminado en 900 en el que ML te deja lo mismo que tu web (también consultado a la API, precio por precio).
+  var REAL = {
+    fecha: "14/10/2026", mp: 4.302, liberaDias: 18,
+    ml: {
+      "Pack de 5 fotos": { precio: 15000, cat: "Fotos", proveedor: 0, clasica: { pct: 16, fijo: 2740, total: 5140 }, premium: { pct: 29.4, fijo: 2740, total: 7150 }, igual: { clasica: 20900, premium: 25900 } },
+      "Pack de 10 fotos": { precio: 25000, cat: "Fotos", proveedor: 0, clasica: { pct: 16, fijo: 3320, total: 7320 }, premium: { pct: 29.4, fijo: 3320, total: 10670 }, igual: { clasica: 32900, premium: 33900 } },
+      "Pack de 20 fotos": { precio: 39900, cat: "Fotos", proveedor: 0, clasica: { pct: 16, fijo: 0, total: 6384 }, premium: { pct: 29.4, fijo: 0, total: 11730.6 }, igual: { clasica: 45900, premium: 54900 } },
+      "Cuadro enmarcado 20x30": { precio: 25900, cat: "Cuadros Decorativos", proveedor: 17999, clasica: { pct: 14.3, fijo: 3320, total: 7023.7 }, premium: { pct: 27.7, fijo: 3320, total: 10494.3 }, igual: { clasica: 32900, premium: 34900 } },
+      "Cuadro ecocuero 20x30": { precio: 34900, cat: "Cuadros Decorativos", proveedor: 25000, clasica: { pct: 14.3, fijo: 0, total: 4990.7 }, premium: { pct: 27.7, fijo: 0, total: 9667.3 }, igual: { clasica: 39900, premium: 46900 } },
+      "Cuadro ecocuero 30x40": { precio: 44900, cat: "Cuadros Decorativos", proveedor: 32900, clasica: { pct: 14.3, fijo: 0, total: 6420.7 }, premium: { pct: 27.7, fijo: 0, total: 12437.3 }, igual: { clasica: 50900, premium: 59900 } }
+    },
+    sinDato: [["Restauración de 1 foto", "Está en $500 de prueba: se calcula cuando tenga su precio de venta."],
+      ["Canción con tu historia", "Está en $500 de prueba, y ML no tiene una categoría para canciones (la API sugiere Libros o Souvenirs)."],
+      ["Canción + video con fotos", "$59.900 en tu web. ML no tiene una categoría para canciones."]]
+  };
+  var CANALES = { "web": "Tu web (Mercado Pago)", "ml-clasica": "ML Clásica", "ml-premium": "ML Premium" };
+  function desglose(producto, precio, canal, proveedor) {
+    var d = { precio: precio, proveedor: proveedor || 0, cargo: 0, pct: 0, fijo: 0, sinDato: false, envioSinDato: false };
+    if (canal === "web") { d.pct = REAL.mp; d.cargo = precio * REAL.mp / 100; }
+    else {
+      var r = REAL.ml[producto];
+      if (!r || r.precio !== precio) { d.sinDato = true; d.neto = null; return d; }
+      var t = r[canal === "ml-premium" ? "premium" : "clasica"];
+      d.pct = t.pct; d.fijo = t.fijo; d.cargo = t.total - t.fijo; d.envioSinDato = d.proveedor > 0;
+    }
+    d.neto = precio - d.cargo - d.fijo - d.proveedor;
+    return d;
+  }
+  function desgloseP(p) { return desglose(p.producto, p.precio, p.canal, p.proveedor); }
+  function neto(p) { return desgloseP(p).neto || 0; }
+  function plata(n) { return n < 0 ? '<span class="negativo">' + $(n) + "</span>" : $(n); }
+
+  // ---------------- pedidos de ejemplo (nombres inventados; productos y precios de tu catálogo) ----------------
+  var LETRA_MIMI = "[Intro]\n\n[Verse 1]\nLos domingos en Banfield\nla mesa larga y el sol\nvos amasando los ñoquis\ny la radio en el rincón\n\n[Pre-Chorus]\nSesenta años, Mimí,\ny la casa sigue igual\n\n[Chorus]\nMimí, Mimí, a la mesa\nque la familia ya está\nMimí, Mimí, la más bella\nhoy te vamos a cantar\n\n[Verse 2]\nTus nietos piden la salsa\nla del frasco de la abuela\nvos te reís y nos decís\nque el secreto es la paciencia\n\n[Chorus]\nMimí, Mimí, a la mesa\nque la familia ya está\nMimí, Mimí, la más bella\nhoy te vamos a cantar\n\n[Bridge]\nNunca te lo dije así:\ntodo lo bueno salió de vos\n\n[Final Chorus]\nMimí, Mimí, a la mesa\nque la familia ya está\nMimí, Mimí, la más bella\nhoy te vamos a cantar\n\n[Outro]\nFeliz cumple, Mimí";
+  var SUNO_MIMI = "TÍTULO: Mimí, a la mesa\nQUÉ CAMBIA EN LA v2: cambia el estilo (la letra queda igual)\n\nSTYLE OF MUSIC:\nArgentine cumbia, 98 bpm, festive, accordion, güira, groovy bass, warm female vocals, Argentine Spanish vocals, bright dance-floor mix\n\nEXCLUDE STYLES (en Más opciones):\nautotune, EDM drops\n\nLYRICS:\n" + LETRA_MIMI + "\n\nFONÉTICA: -";
+  var ANALISIS = { estado_color: "blanco y negro", epoca: "años 60", plano: "retrato de grupo", danos: [{ tipo: "rayas", zona: "esquina superior izquierda", gravedad: "media" }, { tipo: "manchas", zona: "fondo", gravedad: "leve" }],
+    caras: { cantidad: 2, estado: "nítidas" }, elementos: [{ objeto: "vestido de la nena", colores: "celeste", confianza: "media" }], apta: true, motivo: "" };
+  var COMBO = "Canción + video con fotos";
+
+  var pedidos = [
+    { id: "TC-0006", tipo: "TC", canal: "web", cliente: "Sofía Benítez", producto: COMBO, precio: 59900, proveedor: 0, pagado: hace(17), plazoH: 72,
+      col: "turno", falta: "Letra v2 lista: cambia solo el estilo. Abrí suno.txt, pegala en Suno y grabá la previa.", nivel: "aviso",
+      mail: "sofi.benitez@gmail.com", wa: "11 5555-0106",
+      datos: [["Para quién", "Mirta (le dicen Mimí)"], ["Ocasión", "Cumpleaños 60"], ["Estilo", "Pop, voz femenina"], ["Historia", "Los domingos de pastas en Banfield…"]],
+      historial: [[hace(17), "Pedido pagado (Mercado Pago)."], [hace(16.8), "Letra v1: escribió Codex, revisó Claude (3 correcciones). Archivo: 2-letra\\letra-v1.txt"],
+        [hace(12), "Vista previa v1 enviada al cliente: 3-vistas-previas\\v1-previa.mp3"], [hace(2), "Cambio 1 pedido por el cliente: «Me encanta la letra, pero la quiero más cumbiera»."],
+        [hace(1.9), "Interpretación de Claude: cambia el estilo; la letra queda igual."], [hace(1.8), "Letra v2 lista. Archivos: 2-letra\\letra-v2.txt y suno.txt"]],
+      archivos: [
+        { ruta: "2-letra/suno.txt", tipo: "texto", contenido: SUNO_MIMI, accion: "letra-actual" },
+        { ruta: "2-letra/letra-v2.txt", tipo: "texto", contenido: LETRA_MIMI, accion: "letra-actual" },
+        { ruta: "2-letra/letra-v1.txt", tipo: "texto", contenido: LETRA_MIMI, accion: "letra-vieja" },
+        { ruta: "3-vistas-previas/v1-previa.mp3", tipo: "audio" }],
+      audio: { tipo: "previa", n: 2 } },
+    { id: "RF-0013", tipo: "RF", canal: "ml-clasica", cliente: "Marcelo Ríos", producto: "Cuadro enmarcado 20x30", precio: 25900, proveedor: 17999, pagado: hace(5), plazoH: 2,
+      col: "turno", falta: "Aprobó la vista previa. Comprar el cuadro (marco negro) con envío a Lanús.", nivel: "critico", entregado: true, cuadro: true,
+      mail: "marce.rios@hotmail.com", wa: "11 5555-0113",
+      datos: [["Vendido por", "Mercado Libre (Clásica)"], ["Color", "A color"], ["Marco", "Marco negro"], ["Envío", "Lanús, Buenos Aires"]],
+      historial: [[hace(5), "Venta en Mercado Libre."], [hace(4.9), "Análisis de foto-01.jpg: apta. Ficha: 0-analisis\\foto-01.json"], [hace(4.6), "foto-01.jpg restaurada (v1, modo A color): 2-codex\\foto-01.png"],
+        [hace(4.5), "Vista previa enviada al cliente. Comparativa: 3-entrega\\foto-01-comparativa.jpg"], [hace(1), "El cliente aprobó. Final: 3-entrega\\foto-01-final.jpg. Falta comprar el cuadro."]],
+      archivos: [
+        { ruta: "1-original/foto-01.jpg", tipo: "imagen", variante: "antes", accion: "original" },
+        { ruta: "2-codex/foto-01.png", tipo: "imagen", variante: "despues", accion: "foto-version" },
+        { ruta: "3-entrega/foto-01-comparativa.jpg", tipo: "comparar" },
+        { ruta: "3-entrega/foto-01-final.jpg", tipo: "imagen", variante: "despues", accion: "foto-final" },
+        { ruta: "0-analisis/foto-01.json", tipo: "json", contenido: ANALISIS }] },
+    { id: "RF-0011", tipo: "RF", canal: "web", cliente: "Gustavo Leiva", producto: "Pack de 5 fotos", precio: 15000, proveedor: 0, pagado: hace(26), plazoH: 2,
+      col: "turno", falta: "Entregado, pero el mail rebotó: escribió «@hotmial.com».", nivel: "critico", entregado: true,
+      mail: "gustavo.leiva@hotmial.com", wa: "11 5555-0111",
+      datos: [["Color", "Mantener colores de época"], ["Fotos", "3"]],
+      historial: [[hace(26), "Pedido pagado (Mercado Pago)."], [hace(25.4), "Vista previa enviada (el mail rebotó)."], [hace(22), "El cliente aprobó desde el link de WhatsApp."],
+        [hace(21.9), "Entregado: 3-entrega\\foto-01-final.jpg. El mail rebotó: «hotmial.com» no existe."]],
+      archivos: [{ ruta: "2-codex/foto-01.png", tipo: "imagen", variante: "epoca", accion: "foto-version" }, { ruta: "3-entrega/foto-01-final.jpg", tipo: "imagen", variante: "epoca", accion: "foto-final" }] },
+    { id: "TC-0004", tipo: "TC", canal: "web", cliente: "Paula Ferreyra", producto: COMBO, precio: 59900, proveedor: 0, pagado: hace(40), plazoH: 48,
+      col: "turno", falta: "Aprobó la v3. Falta la descarga oficial de Suno (soltala en Archivos).", nivel: "critico",
+      mail: "pau.ferreyra@yahoo.com.ar", wa: "351 555-0104",
+      datos: [["Para quién", "Ricardo, su papá"], ["Ocasión", "Día del Padre adelantado"], ["Estilo", "Folklore, voz masculina"]],
+      historial: [[hace(40), "Pedido pagado (Mercado Pago)."], [hace(39), "Letra v1 lista."], [hace(30), "Cambio 1: «que diga Richard, como le decimos»."], [hace(20), "Cambio 2: «un poco más lenta»."],
+        [hace(3), "El cliente aprobó la v3: 3-vistas-previas\\v3-previa.mp3"]],
+      archivos: [{ ruta: "2-letra/suno.txt", tipo: "texto", contenido: "TÍTULO: Richard, mi viejo\n\nSTYLE OF MUSIC:\nArgentine zamba, 6/8, 64 bpm, tender, criolla guitar, bombo legüero, warm male vocals, Argentine Spanish vocals\n\nLYRICS:\n[Intro]\n\n[Verse 1]\nRichard, el de las manos grandes…", accion: "letra-actual" },
+        { ruta: "3-vistas-previas/v3-previa.mp3", tipo: "audio" }, { ruta: "3-vistas-previas/v2-previa.mp3", tipo: "audio" }],
+      audio: { tipo: "final", para: "Ricardo" } },
+    { id: "RF-0014", tipo: "RF", canal: "web", cliente: "Laura Gómez", producto: "Pack de 5 fotos", precio: 15000, proveedor: 0, pagado: AHORA - 35 * M, plazoH: 2,
+      col: "bot", falta: "Codex restaurando foto-01.jpg (v1).", nivel: "ok",
+      mail: "laura.gomez@gmail.com", wa: "11 5555-0114",
+      datos: [["Color", "A color"], ["Comentario", "La nena de la izquierda es mi mamá"]],
+      historial: [[AHORA - 35 * M, "Pedido pagado (Mercado Pago)."], [AHORA - 33 * M, "Análisis de foto-01.jpg (blanco y negro, años 60): apta. Ficha: 0-analisis\\foto-01.json"]],
+      archivos: [{ ruta: "1-original/foto-01.jpg", tipo: "imagen", variante: "antes", accion: "original" }, { ruta: "0-analisis/foto-01.json", tipo: "json", contenido: ANALISIS }] },
+    { id: "TC-0005", tipo: "TC", canal: "web", cliente: "Darío Molina", producto: COMBO, precio: 59900, proveedor: 0, pagado: hace(20), plazoH: 72,
+      col: "bot", falta: "Cambio 1: «que diga Tata en vez de abuelo». Claude revisando la letra.", nivel: "ok",
+      mail: "dario.molina@gmail.com", wa: "11 5555-0105",
+      datos: [["Para quién", "Su abuelo Tata"], ["Fotos del video", "8, a color"]],
+      historial: [[hace(20), "Pedido pagado (Mercado Pago)."], [hace(19.5), "3 fotos restauradas para el video."], [hace(19), "Letra v1 lista: 2-letra\\letra-v1.txt"], [hace(6), "Vista previa v1 enviada: 3-vistas-previas\\v1-previa.mp3"],
+        [hace(0.2), "Cambio 1: «que diga Tata en vez de abuelo». Cambia solo la letra."]],
+      archivos: [{ ruta: "2-letra/letra-v1.txt", tipo: "texto", contenido: "[Verse 1]\nAbuelo, el del mate amargo…", accion: "letra-actual" }, { ruta: "3-vistas-previas/v1-previa.mp3", tipo: "audio" }] },
+    { id: "RF-0012", tipo: "RF", canal: "web", cliente: "Inés Paredes", producto: "Pack de 5 fotos", precio: 15000, proveedor: 0, pagado: hace(4), plazoH: 2,
+      col: "cliente", falta: "Vista previa enviada hace 3 h. Esperando que apruebe.", nivel: "info", enEspera: true,
+      mail: "ines.paredes@outlook.com", wa: "221 555-0112",
+      datos: [["Color", "En blanco y negro"], ["Fotos", "5"]],
+      historial: [[hace(4), "Pedido pagado (Mercado Pago)."], [hace(3.2), "5 fotos restauradas."], [hace(3), "Vista previa enviada al cliente. Comparativa: 3-entrega\\foto-01-comparativa.jpg"]],
+      archivos: [{ ruta: "3-entrega/foto-01-comparativa.jpg", tipo: "comparar" }, { ruta: "2-codex/foto-01.png", tipo: "imagen", variante: "byn", accion: "foto-version" }] },
+    { id: "TC-0003", tipo: "TC", canal: "web", cliente: "Hernán Sosa", producto: COMBO, precio: 59900, proveedor: 0, pagado: hace(70), plazoH: 72,
+      col: "listo", falta: "Entregado ayer.", nivel: "ok", entregado: true,
+      mail: "hernan.sosa@gmail.com", wa: "11 5555-0103",
+      datos: [["Para quién", "Vero, su esposa"], ["Ocasión", "Aniversario 25"]],
+      historial: [[hace(70), "Pedido pagado (Mercado Pago)."], [hace(30), "El cliente aprobó la v2."], [hace(26), "Entregado: 4-entrega\\Tu canción para Vero.mp3"]],
+      archivos: [{ ruta: "4-entrega/Tu canción para Vero.mp3", tipo: "audio" }] },
+    { id: "RF-0009", tipo: "RF", canal: "ml-premium", cliente: "Carla Núñez", producto: "Cuadro ecocuero 30x40", precio: 44900, proveedor: 32900, pagado: hace(96), plazoH: 2,
+      col: "listo", falta: "Entregado. Cuadro en camino (seguimiento cargado).", nivel: "ok", entregado: true,
+      mail: "carla.nunez@gmail.com", wa: "11 5555-0109",
+      datos: [["Vendido por", "Mercado Libre (Premium)"], ["Color", "A color"], ["Envío", "Quilmes, Buenos Aires"], ["Seguimiento", "MEL-41982277"]],
+      historial: [[hace(96), "Venta en Mercado Libre."], [hace(94), "Entregado: 3-entrega\\foto-01-final.jpg"], [hace(93), "Cuadro comprado al proveedor. Seguimiento MEL-41982277."]],
+      archivos: [{ ruta: "3-entrega/foto-01-final.jpg", tipo: "imagen", variante: "despues", accion: "foto-final" }] }
+  ];
+  // cada pedido tiene además su historial.txt y su pedido.txt (se arman con los datos)
+  pedidos.forEach(function (p) {
+    p.archivos.push({ ruta: "historial.txt", tipo: "texto", accion: "historial" });
+    p.archivos.push({ ruta: (p.tipo === "TC" ? "1-datos/" : "") + "pedido.txt", tipo: "texto", accion: "pedido" });
+  });
+  var COLUMNAS = [
+    { id: "turno", titulo: "Tu turno", vacio: "Nada para hacer." },
+    { id: "bot", titulo: "El bot trabajando", vacio: "El bot está libre." },
+    { id: "cliente", titulo: "Esperando al cliente", vacio: "Nadie está revisando." },
+    { id: "listo", titulo: "Entregados", vacio: "Sin entregas esta semana." }
+  ];
+  function buscarPedido(id) { return pedidos.find(function (p) { return p.id === id; }); }
+  // Cobro: por tu web, Mercado Pago libera a los 18 días (lo que se ve en tus pagos reales). Por ML, lo informa ML.
+  function cobro(p) {
+    if (p.canal !== "web") return { ml: true };
+    var libera = p.pagado + REAL.liberaDias * D;
+    return { libera: libera, liberado: libera <= Date.now() };
+  }
+  function cobroPill(p) {
+    var c = cobro(p);
+    if (c.ml) return '<span class="pill info">Cobro por ML: lo informa al entregar</span>';
+    return c.liberado ? '<span class="pill ok">Liberado ' + fecha(c.libera) + "</span>" : '<span class="pill aviso">Cobrado · se libera ' + fecha(c.libera) + "</span>";
+  }
+
+  // Publicaciones de los proveedores tercerizados (precios y envío: lectura real del 13/10; las lecturas anteriores y el salto del 30x40 son de ejemplo)
+  var proveedores = [
+    { nombre: "Ecocuero bastidor 20x30", vendedor: "ARTEYCOLORES", url: "https://meli.la/1NfcY82", costo: 25000, envio: "Llega gratis mañana", vende: 34900, leido: AHORA - 12 * M,
+      regla: { costoBase: 25000, precioBase: 34900 }, historia: [24500, 25000, 25000, 25000, 25000, 25000, 25000] },
+    { nombre: "Ecocuero bastidor 30x40", vendedor: "ARTEYCOLORES", url: "https://meli.la/1pXSHDH", costo: 32900, envio: "Llega gratis mañana", vende: 44900, leido: AHORA - 12 * M,
+      regla: { costoBase: 32900, precioBase: 44900 }, historia: [32900, 32900, 32900, 32900, 32900, 32900, 47700], pendiente: 47700, ejemplo: true },
+    { nombre: "Enmarcado color madera 20x30", vendedor: "urbancraft", url: "https://meli.la/19apaYx", costo: 17999, envio: "Llega mañana (gratis con tu cuenta)", vende: 25900, leido: AHORA - 12 * M,
+      regla: { ganancia: 5000 }, historia: [16900, 16900, 17999, 17999, 17999, 17999, 17999] },
+    { nombre: "Enmarcado color negro 20x30", vendedor: "urbancraft", url: "https://meli.la/2m8y8ov", costo: 17999, envio: "Llega mañana (gratis con tu cuenta)", vende: 25900, leido: AHORA - 12 * M,
+      regla: { ganancia: 5000 }, historia: [16999, 16999, 16999, 16999, 17999, 17999, 17999] }
+  ];
+  var corrigiendo = -1;
+  // La regla que usa hoy el vigilante del servidor (D-15): (costo + ganancia) / 0,92, redondeado para arriba a $…900
+  function precioVenta(x, costo) {
+    var ganancia = x.regla.ganancia !== undefined ? x.regla.ganancia : x.regla.precioBase * 0.92 - x.regla.costoBase;
+    return Math.ceil(((costo + ganancia) / 0.92 - 900) / 1000) * 1000 + 900;
+  }
+  function queda(x) { return x.vende * (1 - REAL.mp / 100) - x.costo; }
+
+  // ---------------- utilidades ----------------
+  function tostada(texto) {
+    var t = document.createElement("div");
+    t.className = "tostada"; t.textContent = texto;
+    document.getElementById("tostadas").appendChild(t);
+    setTimeout(function () { t.remove(); }, 4600);
+  }
+  function chip(p) { return '<span class="chip ' + p.tipo.toLowerCase() + '">' + (p.tipo === "RF" ? "Lado A · Fotos" : "Lado B · Canción") + "</span>"; }
+  function dur(ms) {
+    var m = Math.round(ms / M);
+    if (m < 60) return m + " min";
+    var h = Math.floor(m / 60), r = m % 60;
+    return h < 24 ? h + " h" + (r ? " " + r + " min" : "") : Math.floor(h / 24) + " d " + (h % 24) + " h";
+  }
+  function restante(p) {
+    if (p.entregado || p.enEspera) return null;
+    var falta = p.pagado + p.plazoH * H - Date.now(), usado = Math.min(1, (Date.now() - p.pagado) / (p.plazoH * H));
+    return { txt: falta < 0 ? "Vencido hace " + dur(-falta) : "Quedan " + dur(falta) + " de " + p.plazoH + " h", usado: usado,
+      nivel: falta < 0 || usado > .85 ? "critico" : usado > .6 ? "aviso" : "ok" };
+  }
+  function plazoHTML(p) {
+    var r = restante(p);
+    return r ? '<div class="plazo ' + r.nivel + '"><div class="riel"><i style="width:' + Math.round(r.usado * 100) + '%"></i></div><small>' + r.txt + "</small></div>" : "";
+  }
+
+  // ---------------- archivos: rutas, menciones y contenido ----------------
+  var ICONO_CARPETA = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 5.5a1.5 1.5 0 0 1 1.5-1.5h3.6l1.8 2h6.6a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5z"/></svg>';
+  function carpetaDe(p) { return "C:\\Pedidos\\" + p.tipo + "\\" + (p.col === "listo" ? "Listos" : "Pendientes") + "\\" + p.id + " - " + p.cliente; }
+  function rutaCompleta(p, a) { return carpetaDe(p) + "\\" + a.ruta.replace(/\//g, "\\"); }
+  function nombre(a) { return a.ruta.split("/").pop(); }
+  function mencion(p, a, texto) {
+    return '<span class="archivo"><button type="button" class="abrir-a" data-archivo="' + p.id + "|" + esc(a.ruta) + '" title="Abrir en una pestaña">' + esc(texto || nombre(a)) + "</button>" +
+      '<button type="button" class="en-carpeta" data-carpeta="' + p.id + "|" + esc(a.ruta) + '" aria-label="Mostrar ' + esc(nombre(a)) + ' en la carpeta" title="Mostrar en la carpeta">' + ICONO_CARPETA + "</button></span>";
+  }
+  // Convierte en menciones los archivos del pedido que aparecen en un texto ("2-letra\letra-v2.txt", "suno.txt"…)
+  function enlazar(p, texto) {
+    var html = esc(texto), porNombre = {};
+    p.archivos.forEach(function (a) { porNombre[esc(nombre(a))] = a; });
+    var nombres = Object.keys(porNombre).sort(function (x, y) { return y.length - x.length; })
+      .map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); });
+    if (!nombres.length) return html;
+    var re = new RegExp("(?:[\\w-]+\\\\)?(" + nombres.join("|") + ")", "g");
+    return html.replace(re, function (todo, n) { return mencion(p, porNombre[n], todo); });
+  }
+  function archivoDe(clave) {
+    var partes = clave.split("|"), p = buscarPedido(partes[0]);
+    return { p: p, a: p.archivos.find(function (a) { return a.ruta === partes[1]; }) };
+  }
+  function contenidoTexto(p, a) {
+    if (a.accion === "historial") return "Historial del pedido " + p.id + "\n\n" + p.historial.map(function (h) { return "[" + hora(h[0]) + "] " + h[1]; }).join("\n\n");
+    if (a.accion === "pedido") return "Pedido " + p.id + " · " + p.producto + "\nPrecio: " + $(p.precio) + "\nCliente: " + p.cliente + "\nEmail: " + p.mail + "\nWhatsApp: " + p.wa +
+      "\nPagado: " + hora(p.pagado) + "\n" + p.datos.map(function (d) { return d[0] + ": " + d[1]; }).join("\n");
+    return a.contenido;
+  }
+  function mostrarEnCarpeta(p, a) {
+    var ruta = rutaCompleta(p, a);
+    tostada("Se abre el Explorador en " + ruta.slice(0, ruta.lastIndexOf("\\")) + " con " + nombre(a) + " seleccionado (en la app real).");
+  }
+
+  // Imágenes de ejemplo dibujadas acá (no son fotos reales)
+  function foto(variante) {
+    var cielo = { antes: ["#A88A62", "#D8C29A"], epoca: ["#B08A5A", "#E6CFA0"], byn: ["#7A7A7A", "#D6D6D6"], despues: ["#7FB2E0", "#CFE5F5"] }[variante];
+    var piso = { antes: "#8C7350", epoca: "#9C7B4C", byn: "#8A8A8A", despues: "#6DA46E" }[variante];
+    var ropa1 = { antes: "#5E4A30", epoca: "#7A4E2E", byn: "#3C3C3C", despues: "#2F4A7A" }[variante];
+    var ropa2 = { antes: "#6E5A3E", epoca: "#9A6A44", byn: "#5A5A5A", despues: "#8FC6E8" }[variante];
+    var piel = { antes: "#8E7556", epoca: "#C9A27A", byn: "#B5B5B5", despues: "#E2B48E" }[variante];
+    var rayas = variante === "antes" ? '<path d="M40 30 L150 140 M300 20 L250 260 M520 60 L470 120" stroke="#F4ECD8" stroke-width="3" opacity=".8"/><circle cx="480" cy="300" r="26" fill="#C9B48C" opacity=".7"/>' : "";
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450"><defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + cielo[0] + '"/><stop offset="1" stop-color="' + cielo[1] + '"/></linearGradient></defs>' +
+      '<rect width="600" height="450" fill="url(#c)"/><rect y="320" width="600" height="130" fill="' + piso + '"/>' +
+      '<circle cx="235" cy="170" r="38" fill="' + piel + '"/><rect x="190" y="210" width="90" height="150" rx="30" fill="' + ropa1 + '"/>' +
+      '<circle cx="360" cy="215" r="28" fill="' + piel + '"/><path d="M325 245 h70 l18 110 h-106 z" fill="' + ropa2 + '"/>' + rayas +
+      '<text x="584" y="438" text-anchor="end" font-family="monospace" font-size="14" fill="#ffffff" opacity=".85">foto de ejemplo</text></svg>';
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+  // Audio de ejemplo: unas notas generadas acá
+  var urlAudio = null;
+  function audioEjemplo() {
+    if (urlAudio) return urlAudio;
+    var sr = 22050, notas = [392, 494, 587, 494, 440, 523, 659, 587], largo = 0.45, n = Math.floor(sr * largo * notas.length);
+    var buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    function txt(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+    txt(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); txt(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); txt(36, "data"); v.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) {
+      var t = i / sr, k = Math.min(notas.length - 1, Math.floor(t / largo)), local = t - k * largo, env = Math.min(1, local * 30) * Math.exp(-local * 4);
+      v.setInt16(44 + i * 2, Math.sin(2 * Math.PI * notas[k] * t) * env * 9000, true);
+    }
+    urlAudio = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+    return urlAudio;
+  }
+
+  // ---------------- mail: mismas reglas que tienda.js ----------------
+  var DOMINIOS = ["gmail.com", "hotmail.com", "hotmail.com.ar", "hotmail.es", "outlook.com", "outlook.com.ar", "outlook.es", "yahoo.com", "yahoo.com.ar",
+    "yahoo.es", "live.com", "live.com.ar", "icloud.com", "me.com", "msn.com", "fibertel.com.ar", "speedy.com.ar", "arnet.com.ar", "mail.com", "ymail.com"];
+  function distancia(a, b) {
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) d[i] = [i];
+    for (j = 0; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  function sugerir(mail) {
+    var at = mail.lastIndexOf("@"); if (at < 1) return "";
+    var u = mail.slice(0, at), dom = mail.slice(at + 1).toLowerCase();
+    if (DOMINIOS.indexOf(dom) >= 0) return "";
+    var mejor = "", menor = 99;
+    DOMINIOS.forEach(function (x) { var n = distancia(dom, x); if (n < menor) { menor = n; mejor = x; } });
+    return menor <= (mejor.length <= 7 ? 1 : 2) ? u + "@" + mejor : "";
+  }
+
+  // ---------------- estado de la pantalla ----------------
+  var principal = document.getElementById("principal"), barraAbiertos = document.getElementById("abiertos");
+  var vista = "hoy", filtro = "todos", busqueda = "", abierto = null, pestana = "resumen";
+  var abiertos = [], activo = -1;      // archivos abiertos en pestañas; -1 = el tablero
+  var sim = { producto: "Cuadro enmarcado 20x30", canal: "ml-clasica" };
+
+  function ir(v, enfocar) {
+    vista = v; abierto = null; activo = -1;
+    document.querySelectorAll(".nav [data-vista]").forEach(function (b) { b.setAttribute("aria-current", b.dataset.vista === v ? "page" : "false"); });
+    pintar();
+    if (enfocar) principal.focus({ preventScroll: true });
+  }
+  function abrir(id) { abierto = id; pestana = "resumen"; activo = -1; pintar(); principal.focus({ preventScroll: true }); window.scrollTo(0, 0); }
+
+  function pintar() {
+    document.getElementById("cuenta-hoy").textContent = pedidos.filter(function (p) { return p.col === "turno"; }).length + proveedores.filter(function (x) { return x.pendiente; }).length;
+    pintarAbiertos();
+    if (activo >= 0) return pintarVisor(abiertos[activo]);
+    if (abierto) return pintarFicha(buscarPedido(abierto));
+    ({ hoy: pintarHoy, pedidos: pintarPedidos, plata: pintarPlata, costos: pintarCostos, proveedores: pintarProveedores, sistema: pintarSistema, futuro: pintarFuturo })[vista]();
+  }
+
+  // ---------------- pestañas de archivos ----------------
+  function pintarAbiertos() {
+    barraAbiertos.hidden = !abiertos.length;
+    if (!abiertos.length) return;
+    var base = abierto ? abierto : { hoy: "Hoy", pedidos: "Pedidos", plata: "Plata", costos: "Costos por venta", proveedores: "Proveedores", sistema: "Sistema", futuro: "ML y Meta" }[vista];
+    barraAbiertos.innerHTML = '<div class="pest" aria-selected="' + (activo < 0) + '"><button type="button" role="tab" data-pest="-1">' + esc(base) + "</button></div>" +
+      abiertos.map(function (t, i) {
+        return '<div class="pest" aria-selected="' + (activo === i) + '"><button type="button" role="tab" data-pest="' + i + '">' + (t.sucio ? '<span class="sucio" aria-label="sin guardar"></span>' : "") +
+          esc(nombre(t.a)) + ' <span class="pid">' + t.p.id + '</span></button><button type="button" class="cerrar" data-cerrar="' + i + '" aria-label="Cerrar ' + esc(nombre(t.a)) + '">×</button></div>';
+      }).join("");
+  }
+  function abrirArchivo(clave) {
+    var x = archivoDe(clave), i = abiertos.findIndex(function (t) { return t.p === x.p && t.a === x.a; });
+    if (i < 0) { abiertos.push({ p: x.p, a: x.a, texto: null, sucio: false, cerrando: false, aviso: null }); i = abiertos.length - 1; }
+    activo = i; pintar(); principal.focus({ preventScroll: true });
+  }
+  function cerrar(i, forzar) {
+    var t = abiertos[i];
+    if (t.sucio && !forzar) { t.cerrando = true; activo = i; pintar(); return; }
+    abiertos.splice(i, 1);
+    activo = -1;
+    pintar();
+  }
+
+  // ---------------- visor y editor ----------------
+  var QUE_HACE = {
+    "letra-actual": { editable: true, info: "Es la letra actual. Si la cambiás, el bot la toma como base para el próximo cambio y actualiza suno.txt." },
+    "letra-vieja": { editable: true, info: "Es una versión anterior: podés editarla, pero el bot no la usa." },
+    "historial": { editable: false, info: "El historial no se edita: podés sumar una nota tuya abajo." },
+    "pedido": { editable: false, info: "Es la copia de lo que pidió el cliente. Para corregir el mail o el WhatsApp, usá Acciones en el pedido." },
+    "original": { info: "Es la foto que mandó el cliente: no se modifica." },
+    "foto-version": { info: "Es la versión que hizo Codex. Si la retocás vos, el bot arma la final y la vista previa nuevas y te pregunta si se la manda al cliente." },
+    "foto-final": { info: "Es la que se entrega. Para cambiarla, retocá la versión de 2-codex: la final se rearma sola." }
+  };
+  function pintarVisor(t) {
+    var p = t.p, a = t.a, q = QUE_HACE[a.accion] || {};
+    var cab = '<div class="visor-cab"><div style="display:grid;gap:4px;min-width:0"><div class="fila"><span class="dato">' + p.id + "</span>" + chip(p) + '<h2 style="font-size:22px">' + esc(nombre(a)) + "</h2></div>" +
+      '<p class="ruta">' + esc(rutaCompleta(p, a)) + '</p></div><div class="fila"><button type="button" class="btn" data-carpeta="' + p.id + "|" + esc(a.ruta) + '">' + ICONO_CARPETA.replace("<svg ", '<svg style="width:16px;height:16px" ') + " Mostrar en la carpeta</button>" +
+      '<button type="button" class="btn" data-toast="Se abriría ' + esc(nombre(a)) + ' con su programa de Windows (en la app real).">Abrir con su programa</button>' +
+      '<button type="button" class="btn" data-abrir="' + p.id + '">Ver el pedido</button></div></div>';
+    var cuerpo = "", info = q.info ? '<div class="que-pasa"><b>Qué pasa si lo cambiás</b><span>' + esc(q.info) + "</span></div>" : "";
+    if (a.tipo === "texto") {
+      var texto = t.texto !== null ? t.texto : contenidoTexto(p, a);
+      if (q.editable) {
+        cuerpo = '<label class="etiqueta" for="editor">Editando</label><textarea class="editor" id="editor" spellcheck="true">' + esc(texto) + "</textarea>" +
+          '<div class="fila"><button type="button" class="btn fuerte" id="guardar" ' + (t.sucio ? "" : "disabled") + ">Guardar</button>" +
+          '<button type="button" class="btn" id="descartar" ' + (t.sucio ? "" : "disabled") + ">Descartar cambios</button>" +
+          '<span class="suave" id="estado-editor">' + (t.sucio ? "Cambios sin guardar" : "Sin cambios") + "</span></div>";
+      } else {
+        cuerpo = '<pre class="lectura">' + esc(texto) + "</pre>";
+        if (a.accion === "historial") cuerpo += '<div class="campo"><label for="nota-historial">Agregar una nota tuya</label><input id="nota-historial" placeholder="Ej.: le escribí por WhatsApp, prefiere retirar el cuadro"></div><div><button type="button" class="btn" id="agregar-nota">Agregar al historial</button></div>';
+      }
+    } else if (a.tipo === "json") {
+      cuerpo = '<pre class="lectura">' + esc(JSON.stringify(a.contenido, null, 2)) + "</pre>";
+      info = '<div class="que-pasa"><b>Análisis de Codex</b><span>Lo que vio en la foto antes de restaurarla. Se lee; no se edita.</span></div>';
+    } else if (a.tipo === "imagen") {
+      cuerpo = '<div class="foto" id="foto"><img src="' + foto(a.variante) + '" alt="' + esc(nombre(a)) + ' (imagen de ejemplo)"></div>' +
+        '<div class="fila"><button type="button" class="btn" id="zoom">Ver al 100 %</button>' +
+        (a.accion === "foto-version" ? '<input type="file" id="retoque" accept="image/*" hidden><label class="btn azul" for="retoque">Reemplazar por mi retoque</label>' : "") + "</div>";
+    } else if (a.tipo === "comparar") {
+      var version = p.archivos.find(function (x) { return x.accion === "foto-version"; });
+      cuerpo = '<div class="comparar"><img src="' + foto("antes") + '" alt="Antes (imagen de ejemplo)"><img class="tapa" id="tapa" src="' + foto(version ? version.variante : "despues") + '" alt="Después (imagen de ejemplo)">' +
+        '<i class="raya" id="raya"></i><span class="izq">Después</span><span class="der">Antes</span></div><div class="campo" style="max-width:640px"><label for="corte">Mové para comparar</label><input id="corte" type="range" min="0" max="100" value="50"></div>';
+      info = '<div class="que-pasa"><b>Revisá las caras</b><span>Antes y después lado a lado: es lo que conviene mirar antes de que el cliente apruebe.</span></div>';
+    } else if (a.tipo === "audio") {
+      cuerpo = '<audio controls preload="none" src="' + audioEjemplo() + '"></audio><p class="nota-ej">Audio de ejemplo generado acá.</p>';
+      info = '<div class="que-pasa"><b>Escuchalo acá</b><span>Para reemplazarlo, soltá otro audio en Archivos del pedido: se renombra y el bot lo sube.</span></div>';
+    }
+    var cerrando = t.cerrando ? '<div class="que-pasa aviso" role="alert"><b>Tenés cambios sin guardar en ' + esc(nombre(a)) + '</b><div class="fila"><button type="button" class="btn fuerte" id="guardar-cerrar">Guardar y cerrar</button>' +
+      '<button type="button" class="btn" id="descartar-cerrar">Cerrar sin guardar</button><button type="button" class="btn" id="seguir">Seguir editando</button></div></div>' : "";
+    var aviso = t.aviso ? '<div class="que-pasa ok" role="status"><b>' + esc(t.aviso[0]) + "</b><span>" + esc(t.aviso[1]) + "</span></div>" : "";
+    principal.innerHTML = '<div class="visor">' + cab + cerrando + aviso + info + cuerpo + "</div>";
+    prepararVisor(t);
+  }
+  function prepararVisor(t) {
+    var ed = document.getElementById("editor");
+    if (ed) ed.addEventListener("input", function () {
+      t.texto = ed.value; t.sucio = ed.value !== contenidoTexto(t.p, t.a); t.aviso = null;
+      document.getElementById("guardar").disabled = !t.sucio; document.getElementById("descartar").disabled = !t.sucio;
+      document.getElementById("estado-editor").textContent = t.sucio ? "Cambios sin guardar" : "Sin cambios";
+      pintarAbiertos();
+    });
+    var corte = document.getElementById("corte");
+    if (corte) corte.addEventListener("input", function () {
+      document.getElementById("tapa").style.clipPath = "inset(0 " + (100 - corte.value) + "% 0 0)";
+      document.getElementById("raya").style.left = corte.value + "%";
+    });
+    var retoque = document.getElementById("retoque");
+    if (retoque) retoque.addEventListener("change", function () {
+      var f = retoque.files[0]; if (!f) return;
+      t.p.historial.push([Date.now(), "Reemplazaste " + nombre(t.a) + " por tu retoque (" + f.name + ")."]);
+      t.aviso = ["Retoque guardado como " + nombre(t.a), "El bot arma la final (Real-ESRGAN) y la vista previa nuevas, y te pregunta si se la manda al cliente. Quedó anotado en el historial."];
+      pintar();
+    });
+  }
+  function guardar(t) {
+    var a = t.a;
+    a.contenido = t.texto; t.texto = null; t.sucio = false; t.cerrando = false;
+    if (a.accion === "letra-actual") {
+      t.p.historial.push([Date.now(), "Editaste a mano " + a.ruta.replace("/", "\\") + ". El bot la usa como letra actual."]);
+      t.aviso = ["Guardado y avisado al bot", "Toma tu versión como la letra actual: actualiza suno.txt y la usa de base si el cliente pide otro cambio. Quedó en el historial."];
+    } else {
+      t.aviso = ["Guardado", "Es una versión anterior: el bot no hace nada con este cambio."];
+    }
+  }
+
+  // ---------------- Hoy ----------------
+  function pintarHoy() {
+    var turno = pedidos.filter(function (p) { return p.col === "turno"; });
+    var activos = pedidos.filter(function (p) { return restante(p); }).sort(function (a, b) { return (a.pagado + a.plazoH * H) - (b.pagado + b.plazoH * H); });
+    var porLiberar = pedidos.filter(function (p) { var c = cobro(p); return !c.ml && !c.liberado; }).sort(function (a, b) { return cobro(a).libera - cobro(b).libera; });
+    var aprobar = proveedores.filter(function (x) { return x.pendiente; });
+    principal.innerHTML =
+      '<div class="cabeza"><div><p class="etiqueta">' + new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) + '</p><h2>Hoy</h2></div>' +
+      '<p class="suave">' + (turno.length + aprobar.length) + " cosas necesitan tu mano</p></div>" +
+      '<div class="alertas">' + turno.map(function (p) {
+        return '<div class="alerta ' + (p.nivel === "critico" ? "critico" : p.nivel === "info" ? "info" : "") + '"><div><div class="fila"><span class="dato">' + p.id + "</span>" + chip(p) +
+          "<b>" + esc(p.cliente) + "</b></div><p>" + enlazar(p, p.falta) + '</p></div><button type="button" class="btn" data-abrir="' + p.id + '">Abrir</button></div>';
+      }).join("") +
+      aprobar.map(function (x) {
+        return '<div class="alerta"><div><div class="fila"><b>Proveedores</b><span class="suave">(ejemplo)</span></div><p>' + esc(x.nombre) + ": pasó de " + $(x.costo) + " a " + $(x.pendiente) + " (" + pct((x.pendiente / x.costo - 1) * 100) +
+          "). Por ser más de 40 %, no se ajustó solo: aprobalo o rechazalo.</p></div>" + '<button type="button" class="btn" data-ir="proveedores">Revisar</button></div>';
+      }).join("") + "</div>" +
+      '<div class="grilla-3">' +
+      '<div class="panel"><p class="etiqueta">Vendido</p><p class="cifra">' + $(pedidos.reduce(function (s, p) { return s + p.precio; }, 0)) + '</p><p class="suave">' + pedidos.length + " pedidos de ejemplo</p></div>" +
+      '<div class="panel"><p class="etiqueta">Por liberar en Mercado Pago</p><p class="cifra">' + $(porLiberar.reduce(function (s, p) { return s + p.precio - desgloseP(p).cargo; }, 0)) +
+      '</p><p class="suave">' + (porLiberar.length ? "La próxima: " + fecha(cobro(porLiberar[0]).libera) + " (" + porLiberar[0].id + ")" : "Nada pendiente") + "</p></div>" +
+      '<div class="panel"><p class="etiqueta">Te queda</p><p class="cifra">' + $(pedidos.reduce(function (s, p) { return s + neto(p); }, 0)) + '</p><p class="suave">Con comisiones reales; sin el envío por ML</p></div></div>' +
+      '<div class="panel" style="display:grid;gap:12px"><h3>Plazos que corren</h3>' + activos.map(function (p) {
+        return '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;align-items:center"><div class="fila"><span class="dato">' + p.id + "</span>" + chip(p) + "</div>" + plazoHTML(p) + "</div>";
+      }).join("") + "</div>";
+  }
+
+  // ---------------- Pedidos ----------------
+  function pintarPedidos() {
+    var lista = pedidos.filter(function (p) {
+      return (filtro === "todos" || p.tipo === filtro) && (!busqueda || (p.id + " " + p.cliente).toLowerCase().indexOf(busqueda.toLowerCase()) >= 0);
+    });
+    principal.innerHTML =
+      '<div class="cabeza"><h2>Pedidos</h2><div class="filtros" role="group" aria-label="Filtrar">' +
+      [["todos", "Todos"], ["RF", "Fotos"], ["TC", "Canciones"]].map(function (f) { return '<button type="button" data-filtro="' + f[0] + '" aria-pressed="' + (filtro === f[0]) + '">' + f[1] + "</button>"; }).join("") +
+      '<input id="buscar" type="search" aria-label="Buscar pedido" placeholder="Buscar por número o nombre" value="' + esc(busqueda) + '"></div></div>' +
+      '<div class="columnas">' + COLUMNAS.map(function (c) {
+        var items = lista.filter(function (p) { return p.col === c.id; });
+        return '<section class="columna ' + c.id + '"><header><h3>' + c.titulo + '</h3><span class="dato suave">' + items.length + "</span></header>" +
+          (items.length ? items.map(tarjeta).join("") : '<p class="vacia">' + c.vacio + "</p>") + "</section>";
+      }).join("") + "</div>";
+    var b = document.getElementById("buscar");
+    b.addEventListener("input", function () { busqueda = b.value; var pos = b.selectionStart; pintarPedidos(); var n = document.getElementById("buscar"); n.focus(); n.setSelectionRange(pos, pos); });
+  }
+  function tarjeta(p) {
+    return '<button type="button" class="tarjeta" data-abrir="' + p.id + '"><span class="arriba"><span class="dato">' + p.id + "</span>" + chip(p) + "</span>" +
+      "<b>" + esc(p.cliente) + '</b><span class="suave" style="font-size:13px">' + esc(p.producto) + " · " + $(p.precio) + (p.canal !== "web" ? " · " + CANALES[p.canal] : "") + "</span>" +
+      '<span class="falta">' + esc(p.falta) + "</span>" + plazoHTML(p) + "</button>";
+  }
+
+  // ---------------- ficha del pedido ----------------
+  function listaDesglose(d, canal) {
+    if (d.sinDato) return '<ul class="lista-simple"><li><span>Precio</span><span class="num">' + $(d.precio) + '</span></li><li class="sin"><span>Cargos de ML</span><span>sin dato</span></li></ul>';
+    return '<ul class="lista-simple"><li><span>Precio</span><span class="num">' + $(d.precio) + "</span></li>" +
+      '<li class="resta"><span>' + (canal === "web" ? "Comisión Mercado Pago (" + pct(d.pct) + ")" : "Cargo por venta ML (" + pct(d.pct) + ")") + '</span><span class="num">−' + $(d.cargo) + "</span></li>" +
+      (d.fijo ? '<li class="resta"><span>Costo fijo ML</span><span class="num">−' + $(d.fijo) + "</span></li>" : "") +
+      (d.proveedor ? '<li class="resta"><span>Proveedor del cuadro</span><span class="num">−' + $(d.proveedor) + "</span></li>" : "") +
+      (d.envioSinDato ? '<li class="sin"><span>Envío por ML</span><span>sin dato</span></li>' : "") +
+      '<li class="total"><span>Te queda' + (d.envioSinDato ? " (sin el envío)" : "") + '</span><span class="num">' + plata(d.neto) + "</span></li></ul>";
+  }
+  function pintarFicha(p) {
+    var pest = [["resumen", "Resumen"], ["historial", "Historial"], ["archivos", "Archivos"], ["acciones", "Acciones"]];
+    principal.innerHTML =
+      '<button type="button" class="volver" data-ir="pedidos">← Pedidos</button>' +
+      '<div class="cabeza"><div style="display:grid;gap:6px"><div class="fila"><span class="dato">' + p.id + "</span>" + chip(p) + cobroPill(p) + "</div><h2>" + esc(p.cliente) + '</h2><p class="suave">' + esc(p.producto) + " · " + CANALES[p.canal] + "</p></div>" +
+      '<div style="min-width:min(260px,100%)">' + (plazoHTML(p) || '<span class="pill ' + (p.enEspera ? "info" : "ok") + '">' + (p.enEspera ? "Esperando al cliente" : "Entregado") + "</span>") + "</div></div>" +
+      '<div class="ficha"><div class="panel" style="display:grid;gap:16px"><div class="pestanas" role="tablist">' +
+      pest.map(function (x) { return '<button type="button" role="tab" data-pestana="' + x[0] + '" aria-selected="' + (pestana === x[0]) + '">' + x[1] + "</button>"; }).join("") +
+      '</div><div id="contenido-pestana"></div></div>' +
+      '<aside class="panel" style="display:grid;gap:12px"><h3>Qué falta</h3><p>' + enlazar(p, p.falta) + "</p>" + listaDesglose(desgloseP(p), p.canal) +
+      '<p class="nota-ej">Comisiones reales al ' + REAL.fecha + ": Mercado Pago, de tus pagos; Mercado Libre, de su API.</p></aside></div>";
+    pintarPestana(p);
+  }
+  function pintarPestana(p) {
+    var caja = document.getElementById("contenido-pestana");
+    if (pestana === "resumen") {
+      caja.innerHTML = '<dl class="datos">' + p.datos.map(function (d) { return "<dt>" + esc(d[0]) + "</dt><dd>" + esc(d[1]) + "</dd>"; }).join("") +
+        "<dt>Mail</dt><dd>" + esc(p.mail) + "</dd><dt>WhatsApp</dt><dd>" + esc(p.wa) + "</dd><dt>Pagado</dt><dd>" + hora(p.pagado) + "</dd></dl>";
+    } else if (pestana === "historial") {
+      var h = p.archivos.find(function (a) { return a.accion === "historial"; });
+      caja.innerHTML = '<p class="suave" style="margin-bottom:6px">Lo mismo que ' + mencion(p, h) + " en la carpeta del pedido.</p>" + '<ol class="linea-tiempo">' +
+        p.historial.map(function (x) { return "<li><time>" + hora(x[0]) + "</time><span>" + enlazar(p, x[1]) + "</span></li>"; }).join("") + "</ol>";
+    } else if (pestana === "archivos") {
+      caja.innerHTML = '<div style="display:grid;gap:14px"><div class="fila" style="justify-content:space-between"><p class="ruta">' + esc(carpetaDe(p)) + '</p><button type="button" class="btn" data-toast="Se abre el Explorador en ' + esc(carpetaDe(p)) + ' (en la app real).">Abrir la carpeta</button></div>' +
+        '<p class="suave">El nombre abre el archivo acá, en una pestaña. La carpeta lo muestra en el Explorador, seleccionado.</p><ul class="archivos">' +
+        p.archivos.map(function (a) {
+          var q = QUE_HACE[a.accion] || {};
+          var tipo = a.tipo === "texto" ? (q.editable ? "texto · editable" : "texto · solo lectura") : { imagen: "imagen", comparar: "antes y después", audio: "audio", json: "análisis" }[a.tipo];
+          return "<li>" + mencion(p, a, a.ruta.replace("/", "\\")) + '<span class="suave" style="font-size:13px">' + tipo + "</span></li>";
+        }).join("") + "</ul>" + (p.audio ? soltarHTML(p) : "") + "</div>";
+      if (p.audio) prepararSoltar(p);
+    } else {
+      caja.innerHTML = accionesHTML(p);
+      prepararAcciones(p);
+    }
+  }
+  function destinoAudio(p) { return p.audio.tipo === "previa" ? "3-vistas-previas\\v" + p.audio.n + "-previa.mp3" : "4-entrega\\Tu canción para " + p.audio.para + ".mp3"; }
+  function soltarHTML(p) {
+    return '<input type="file" id="audio-in" accept="audio/*" hidden><label class="soltar" id="soltar" for="audio-in"><strong>Soltá acá el audio de Suno</strong>' +
+      "<span>Con el nombre que tenga. Se guarda como <b>" + esc(destinoAudio(p)) + '</b></span><span style="opacity:.8">o tocá para elegirlo</span></label>' +
+      '<div class="resultado-audio" id="resultado-audio" hidden></div>';
+  }
+  function prepararSoltar(p) {
+    var zona = document.getElementById("soltar"), entrada = document.getElementById("audio-in"), res = document.getElementById("resultado-audio"), destino = destinoAudio(p);
+    function recibir(f) {
+      if (!f) return;
+      if (f.type && f.type.indexOf("audio") !== 0) { tostada("Eso no es un audio: soltá el MP3 o WAV que bajaste de Suno."); return; }
+      res.hidden = false;
+      res.innerHTML = '<p><span class="dato">' + esc(f.name) + '</span> → <b class="dato">' + esc(destino) + "</b> (" + (f.size / 1048576).toFixed(1) + " MB)</p>" +
+        '<audio controls src="' + URL.createObjectURL(f) + '"></audio><div class="fila"><button type="button" class="btn azul" id="guardar-audio">Guardar en la carpeta</button>' +
+        '<button type="button" class="btn" id="otro-audio">Elegir otro</button></div>';
+      document.getElementById("guardar-audio").addEventListener("click", function () {
+        var ruta = destino.replace("\\", "/");
+        if (!p.archivos.some(function (a) { return a.ruta === ruta; })) p.archivos.unshift({ ruta: ruta, tipo: "audio" });
+        p.historial.push([Date.now(), "Audio guardado: " + destino + " (era " + f.name + ")."]);
+        tostada(p.audio.tipo === "previa" ? "Guardado. El bot sube la vista previa v" + p.audio.n + " al cliente en menos de un minuto (en la app real)."
+          : "Guardado con título y datos. El bot entrega la canción y le manda el mail al cliente (en la app real).");
+        pintarPestana(p);
+      });
+      document.getElementById("otro-audio").addEventListener("click", function () { entrada.click(); });
+    }
+    entrada.addEventListener("change", function () { recibir(entrada.files[0]); });
+    ["dragenter", "dragover"].forEach(function (e) { zona.addEventListener(e, function (ev) { ev.preventDefault(); zona.classList.add("encima"); }); });
+    ["dragleave", "drop"].forEach(function (e) { zona.addEventListener(e, function (ev) { ev.preventDefault(); zona.classList.remove("encima"); }); });
+    zona.addEventListener("drop", function (ev) { recibir(ev.dataTransfer.files[0]); });
+  }
+  function accionesHTML(p) {
+    var s = sugerir(p.mail);
+    return '<div class="acciones-lista">' +
+      '<section><h3>Pedirle algo al bot</h3><div class="campo"><label for="instruccion">Instrucción para rehacer</label><textarea id="instruccion" rows="3" placeholder="' +
+      (p.tipo === "RF" ? "Ej.: el vestido era celeste, no verde" : "Ej.: cambiá solo el estribillo: que diga Mimí") + '"></textarea></div>' +
+      '<div class="fila"><button type="button" class="btn fuerte" id="mandar-instruccion">Mandar al bot</button><button type="button" class="btn" id="cambio-extra">Dar un cambio extra sin costo</button></div></section>' +
+      '<section><h3>Datos de contacto</h3><div class="campo"><label for="mail-edit">Mail</label><input id="mail-edit" type="email" value="' + esc(p.mail) + '"></div>' +
+      '<div id="sugerencia-mail">' + (s ? sugerenciaHTML(s) : "") + "</div>" +
+      '<div class="fila"><button type="button" class="btn" id="guardar-mail">Guardar y reenviar el último mail</button></div>' +
+      '<div class="fila"><span>WhatsApp: <b class="dato">' + esc(p.wa) + '</b></span><button type="button" class="btn" id="copiar-wa">Copiar mensaje para WhatsApp</button></div></section>' +
+      '<section><h3>Reenviar</h3><div class="fila"><button type="button" class="btn" data-toast="Se reenviaría la vista previa a ' + esc(p.mail) + ' (en la app real).">Reenviar vista previa</button>' +
+      '<button type="button" class="btn" data-toast="Se reenviaría el link de descarga a ' + esc(p.mail) + ' (en la app real).">Reenviar entrega</button></div></section>' +
+      (p.cuadro ? '<section><h3>Cuadro</h3><p>Marco negro, envío a Lanús. Proveedor: ' + $(p.proveedor) + '.</p><div class="campo"><label for="seguimiento">Número de seguimiento</label><input id="seguimiento" placeholder="Ej.: MEL-41982277"></div>' +
+        '<div class="fila"><a class="btn" href="https://meli.la/2m8y8ov" target="_blank" rel="noopener">Abrir proveedor</a><button type="button" class="btn fuerte" id="cuadro-comprado">Marcar comprado y avisar al cliente</button></div></section>' : "") +
+      "</div>";
+  }
+  function sugerenciaHTML(s) {
+    return '<p class="sugerencia" role="status">¿Quisiste decir <b>' + esc(s) + '</b>? <button type="button" class="btn" id="usar-sugerencia" data-mail="' + esc(s) + '">Corregir</button></p>';
+  }
+  function prepararAcciones(p) {
+    var caja = document.getElementById("contenido-pestana");
+    if (!caja.dataset.escucha) caja.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button");
+      if (!b || pestana !== "acciones") return;
+      if (b.id === "mandar-instruccion") {
+        var t = document.getElementById("instruccion").value.trim();
+        if (!t) { tostada("Escribí qué querés que cambie."); document.getElementById("instruccion").focus(); return; }
+        p.historial.push([Date.now(), "Instrucción tuya para rehacer: " + t]);
+        tostada("Anotado en el historial. El bot rehace " + p.id + " con tu instrucción en la próxima vuelta (en la app real).");
+        document.getElementById("instruccion").value = "";
+      }
+      if (b.id === "cambio-extra") { p.historial.push([Date.now(), "Cambio extra sin costo habilitado."]); tostada(p.id + " tiene un cambio más. El cliente lo ve en su página de revisión (en la app real)."); }
+      if (b.id === "usar-sugerencia") { document.getElementById("mail-edit").value = b.dataset.mail; document.getElementById("sugerencia-mail").innerHTML = ""; }
+      if (b.id === "guardar-mail") {
+        var m = document.getElementById("mail-edit").value.trim(), s = sugerir(m);
+        if (s) { document.getElementById("sugerencia-mail").innerHTML = sugerenciaHTML(s); return; }
+        p.mail = m; p.historial.push([Date.now(), "Mail corregido a " + m + " y último mail reenviado."]);
+        if (p.falta.indexOf("rebotó") >= 0) { p.col = "listo"; p.falta = "Entregado. Mail corregido y reenviado."; }
+        tostada("Mail guardado. Se reenvió el último mensaje a " + m + " (en la app real).");
+      }
+      if (b.id === "copiar-wa") {
+        var texto = "¡Hola " + p.cliente.split(" ")[0] + "! Te escribimos de " + (p.tipo === "RF" ? "Restauración de fotos" : "Tu Canción") + " por tu pedido " + p.id + ".";
+        if (navigator.clipboard) navigator.clipboard.writeText(texto).then(function () { tostada("Mensaje copiado. Pegalo en WhatsApp."); }, function () { tostada(texto); });
+        else tostada(texto);
+      }
+      if (b.id === "cuadro-comprado") {
+        var n = document.getElementById("seguimiento").value.trim();
+        if (!n) { tostada("Cargá el número de seguimiento para avisarle al cliente."); document.getElementById("seguimiento").focus(); return; }
+        p.cuadro = false; p.col = "listo"; p.falta = "Cuadro comprado. Seguimiento " + n + ".";
+        p.historial.push([Date.now(), "Cuadro comprado. Seguimiento " + n + "; aviso enviado al cliente."]);
+        tostada("Listo. Se le avisa al cliente con el seguimiento " + n + " (en la app real).");
+        pintar();
+      }
+    });
+    caja.dataset.escucha = "1";
+    var campo = document.getElementById("mail-edit");
+    campo.addEventListener("change", function () { var s = sugerir(campo.value.trim()); document.getElementById("sugerencia-mail").innerHTML = s ? sugerenciaHTML(s) : ""; });
+  }
+
+  // ---------------- Plata ----------------
+  function pintarPlata() {
+    var orden = pedidos.slice().sort(function (a, b) { return b.pagado - a.pagado; });
+    var tot = { precio: 0, cargos: 0, prov: 0, neto: 0 };
+    orden.forEach(function (p) { var d = desgloseP(p); tot.precio += p.precio; tot.cargos += d.cargo + d.fijo; tot.prov += d.proveedor; tot.neto += d.neto || 0; });
+    var proximas = pedidos.filter(function (p) { var c = cobro(p); return !c.ml && !c.liberado; }).sort(function (a, b) { return cobro(a).libera - cobro(b).libera; });
+    principal.innerHTML =
+      '<div class="cabeza"><h2>Plata</h2><p class="nota-ej">Pedidos de ejemplo con comisiones reales al ' + REAL.fecha + ". Las ventas por ML no incluyen el envío: sin dato.</p></div>" +
+      '<div class="grilla-3"><div class="panel"><p class="etiqueta">Vendido</p><p class="cifra">' + $(tot.precio) + '</p></div><div class="panel"><p class="etiqueta">Comisiones de MP y ML</p><p class="cifra">' + $(tot.cargos) +
+      '</p></div><div class="panel"><p class="etiqueta">Proveedores</p><p class="cifra">' + $(tot.prov) + '</p></div><div class="panel"><p class="etiqueta">Te queda</p><p class="cifra">' + $(tot.neto) + "</p></div></div>" +
+      '<div class="panel" style="display:grid;gap:8px"><h3>Próximas liberaciones de Mercado Pago</h3><p class="suave">Mercado Pago liberó tus pagos reales 18 días después de cobrarlos. Lo vendido por ML lo informa ML al entregar.</p><ul class="lista-simple">' +
+      proximas.map(function (p) { return '<li><span><b class="dato">' + fecha(cobro(p).libera) + "</b> · " + p.id + " · " + esc(p.producto) + '</span><span class="num">' + $(p.precio - desgloseP(p).cargo) + "</span></li>"; }).join("") + "</ul></div>" +
+      '<div class="panel tabla-caja" style="padding:0"><table><thead><tr><th>Pedido</th><th>Canal</th><th>Producto</th><th class="num">Precio</th><th class="num">Comisiones</th><th class="num">Proveedor</th><th class="num">Te queda</th><th>Cobro</th></tr></thead><tbody>' +
+      orden.map(function (p) {
+        var d = desgloseP(p);
+        return '<tr><td><button type="button" class="volver" data-abrir="' + p.id + '">' + p.id + '</button></td><td class="canal">' + CANALES[p.canal] + "</td><td>" + esc(p.producto) + '</td><td class="num">' + $(p.precio) +
+          '</td><td class="num">' + $(d.cargo + d.fijo) + " <span class=\"suave\">(" + pct(d.pct) + (d.fijo ? " + fijo" : "") + ')</span></td><td class="num">' + (d.proveedor ? $(d.proveedor) : "—") +
+          '</td><td class="num"><b>' + plata(d.neto) + "</b>" + (d.envioSinDato ? ' <span class="suave">sin envío</span>' : "") + "</td><td>" + cobroPill(p) + "</td></tr>";
+      }).join("") + '</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">' + $(tot.precio) + '</td><td class="num">' + $(tot.cargos) + '</td><td class="num">' + $(tot.prov) + '</td><td class="num">' + $(tot.neto) + "</td><td></td></tr></tfoot></table></div>";
+  }
+
+  // ---------------- Costos por venta (solo datos reales) ----------------
+  function pintarCostos() {
+    var nombres = Object.keys(REAL.ml);
+    principal.innerHTML =
+      '<div class="cabeza"><div><h2>Costos por venta</h2><p class="suave">Solo comisiones reales. Lo que las APIs no informan dice "sin dato".</p></div>' +
+      '<button type="button" class="btn" data-toast="Se consultan de nuevo la API de ML y tus últimos pagos de Mercado Pago (en la app real).">Actualizar desde las APIs</button></div>' +
+      '<div class="panel" style="display:grid;gap:12px"><h3>De dónde sale cada número</h3><ul class="fuentes">' +
+      '<li><b>Mercado Pago</b><span>' + pct(REAL.mp) + " por pago: lo que cobró en tus 6 pagos reales (todos con dinero en cuenta). Con tarjeta todavía no hubo pagos; cuando entre el primero, se suma su comisión real. Libera la plata 18 días después.</span></li>" +
+      "<li><b>Mercado Libre</b><span>API de ML (precios de publicación), leída el " + REAL.fecha + ", en la categoría que ML sugiere para cada producto: Fotos para las restauraciones digitales y Cuadros Decorativos para los cuadros. Premium suma 13,4 % por cuotas sin interés.</span></li>" +
+      "<li><b>Proveedores</b><span>Lectura del vigilante del 13/10 (las publicaciones de tus links). El enmarcado toma el más caro de los dos colores.</span></li>" +
+      "<li><b>Sin dato</b><span>Envío por ML de los cuadros (la API lo calcula con medida y peso del paquete) e IVA de los cargos de ML (este dato de la API no lo aclara; lo exacto viene en cada venta).</span></li></ul></div>" +
+      '<div class="dos"><div class="panel" style="display:grid;gap:14px"><h3>Simulá una venta</h3><div class="grilla-3" style="gap:12px">' +
+      '<div class="campo"><label for="sim-producto">Producto</label><select id="sim-producto">' + nombres.map(function (n) { return '<option value="' + esc(n) + '"' + (n === sim.producto ? " selected" : "") + ">" + n + " · " + $(REAL.ml[n].precio) + "</option>"; }).join("") +
+      REAL.sinDato.map(function (x) { return '<option value="' + esc(x[0]) + '"' + (x[0] === sim.producto ? " selected" : "") + ">" + x[0] + " · sin dato</option>"; }).join("") + "</select></div>" +
+      '<div class="campo"><label for="sim-canal">Canal</label><select id="sim-canal">' + Object.keys(CANALES).map(function (k) { return '<option value="' + k + '"' + (k === sim.canal ? " selected" : "") + ">" + CANALES[k] + "</option>"; }).join("") + "</select></div>" +
+      '</div><div id="sim-resultado"></div></div>' +
+      '<div class="panel" style="display:grid;gap:12px"><h3>Te queda por venta</h3><div class="tabla-caja"><table style="min-width:440px"><thead><tr><th>Producto</th><th class="num">Tu web</th><th class="num">ML Clásica</th><th class="num">ML Premium</th></tr></thead><tbody>' +
+      nombres.map(function (n) {
+        var r = REAL.ml[n];
+        return "<tr><td>" + n + "</td>" + ["web", "ml-clasica", "ml-premium"].map(function (k) { return '<td class="num">' + plata(desglose(n, r.precio, k, r.proveedor).neto) + "</td>"; }).join("") + "</tr>";
+      }).join("") + '</tbody></table></div><p class="nota-ej">En ML, sin el envío (sin dato).</p></div></div>' +
+      '<div class="panel" style="display:grid;gap:12px"><h3>A cuánto publicar en ML para ganar lo mismo que en tu web</h3><div class="tabla-caja"><table><thead><tr><th>Producto</th><th>Categoría en ML</th><th class="num">Precio en tu web</th><th class="num">Te queda en tu web</th><th class="num">ML Clásica</th><th class="num">ML Premium</th></tr></thead><tbody>' +
+      nombres.map(function (n) {
+        var r = REAL.ml[n];
+        return "<tr><td>" + n + "</td><td>" + r.cat + '</td><td class="num">' + $(r.precio) + '</td><td class="num">' + $(desglose(n, r.precio, "web", r.proveedor).neto) + '</td><td class="num"><b>' + $(r.igual.clasica) + '</b></td><td class="num"><b>' + $(r.igual.premium) + "</b></td></tr>";
+      }).join("") + '</tbody></table></div><p class="nota-ej">Calculado con la API de ML: se pidió el cargo real precio por precio (terminados en 900) hasta igualar lo que te queda en tu web. Sin el envío por ML.</p></div>' +
+      '<div class="panel" style="display:grid;gap:10px"><h3>Todavía sin dato</h3><ul class="lista-simple">' + REAL.sinDato.map(function (x) { return "<li><b>" + x[0] + '</b><span class="suave">' + x[1] + "</span></li>"; }).join("") + "</ul></div>";
+    document.getElementById("sim-producto").addEventListener("change", function (e) { sim.producto = e.target.value; simular(); });
+    document.getElementById("sim-canal").addEventListener("change", function (e) { sim.canal = e.target.value; simular(); });
+    simular();
+  }
+  function simular() {
+    var caja = document.getElementById("sim-resultado"), r = REAL.ml[sim.producto];
+    if (!r) {
+      var x = REAL.sinDato.find(function (s) { return s[0] === sim.producto; });
+      caja.innerHTML = '<p class="suave">' + esc(x[1]) + "</p>";
+      return;
+    }
+    caja.innerHTML = listaDesglose(desglose(sim.producto, r.precio, sim.canal, r.proveedor), sim.canal);
+  }
+
+  // ---------------- Proveedores: lectura automática y revisión a mano ----------------
+  function chispa(valores) {
+    var w = 96, h = 26, min = Math.min.apply(null, valores), max = Math.max.apply(null, valores), rango = max - min || 1;
+    var pts = valores.map(function (v, i) { return [2 + i * (w - 4) / (valores.length - 1), h - 3 - (v - min) / rango * (h - 6)]; });
+    var ult = pts[pts.length - 1];
+    return '<svg class="chispa" viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="Precio de las últimas 7 lecturas: de ' + $(valores[0]) + " a " + $(valores[valores.length - 1]) + '"><polyline points="' +
+      pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '"></polyline><circle cx="' + ult[0].toFixed(1) + '" cy="' + ult[1].toFixed(1) + '" r="2.6"></circle></svg>';
+  }
+  function pintarProveedores() {
+    var pendientes = proveedores.filter(function (x) { return x.pendiente; });
+    principal.innerHTML =
+      '<div class="cabeza"><div><h2>Proveedores</h2><p class="suave">El servidor lee las publicaciones cada 30 minutos y ajusta el precio de venta solo. Acá lo podés revisar y corregir a mano.</p></div>' +
+      '<button type="button" class="btn fuerte" id="revisar-todos">Revisar todas ahora</button></div>' +
+      pendientes.map(function (x) {
+        var i = proveedores.indexOf(x), nuevo = precioVenta(x, x.pendiente);
+        return '<div class="aprobar" role="status"><b>' + (x.ejemplo ? "Ejemplo · " : "") + esc(x.nombre) + ": el proveedor pasó de " + $(x.costo) + " a " + $(x.pendiente) + " (" + pct((x.pendiente / x.costo - 1) * 100) + ")</b>" +
+          "<span>Por ser más de 40 %, no se ajustó solo. Con la regla del vigilante, el precio de venta pasaría de " + $(x.vende) + " a " + $(nuevo) + ".</span>" +
+          '<div class="fila"><button type="button" class="btn fuerte" data-aprobar="' + i + '">Aprobar ' + $(nuevo) + '</button><button type="button" class="btn" data-rechazar="' + i + '">Rechazar: fue un error de lectura</button>' +
+          '<a class="btn" href="' + x.url + '" target="_blank" rel="noopener">Ver la publicación</a></div></div>';
+      }).join("") +
+      '<div class="panel tabla-caja" style="padding:0"><table><thead><tr><th>Publicación</th><th class="num">Costo</th><th>Últimas lecturas</th><th>Envío</th><th>Leída</th><th class="num">Vendés a</th><th class="num">Te queda en tu web</th><th></th></tr></thead><tbody>' +
+      proveedores.map(function (x, i) {
+        return '<tr><td><div style="display:grid;gap:2px"><b>' + esc(x.nombre) + '</b><span class="suave" style="font-size:12px">' + esc(x.vendedor) + ' · <a class="enlace" href="' + x.url + '" target="_blank" rel="noopener">abrir en ML</a></span></div></td>' +
+          '<td class="num">' + $(x.costo) + (x.manual ? '<br><span class="pill info">cargado a mano</span>' : "") + "</td><td>" + chispa(x.historia) + '</td><td><span class="pill ' + (x.envio.indexOf("Sin envío") < 0 ? "ok" : "critico") + '">' + esc(x.envio) + "</span></td>" +
+          '<td class="suave" style="font-size:13px">hace ' + dur(Date.now() - x.leido) + '</td><td class="num">' + $(x.vende) + '</td><td class="num">' + $(queda(x)) + "</td>" +
+          '<td><div class="fila" style="flex-wrap:nowrap"><button type="button" class="btn chico" data-revisar="' + i + '">Revisar</button><button type="button" class="btn chico" data-corregir="' + i + '">Corregir a mano</button></div></td></tr>';
+      }).join("") + '</tbody></table></div><p class="nota-ej">Costos y envío: lectura real del 13/10. Las lecturas anteriores y el salto del 30x40 son de ejemplo. "Te queda" usa la comisión real de MP (' + pct(REAL.mp) + "); el vigilante calcula los precios con 8 % (regla D-15).</p>" +
+      (corrigiendo >= 0 ? formularioCorregir(proveedores[corrigiendo]) : "") +
+      '<div class="panel" style="display:grid;gap:10px"><h3>Cuadros por comprar</h3>' + (pedidos.filter(function (p) { return p.cuadro; }).map(function (p) {
+        return '<div class="fila" style="justify-content:space-between"><span><span class="dato">' + p.id + "</span> · " + esc(p.cliente) + ' · Marco negro</span><button type="button" class="btn" data-abrir="' + p.id + '">Abrir</button></div>';
+      }).join("") || '<p class="suave">No hay cuadros pendientes.</p>') + "</div>";
+    if (corrigiendo >= 0) {
+      document.getElementById("costo-manual").addEventListener("input", vistaPreviaCorregir);
+      vistaPreviaCorregir();
+    }
+  }
+  function formularioCorregir(x) {
+    return '<div class="corregir"><h3>Corregir a mano: ' + esc(x.nombre) + '</h3><p>Abrí la publicación, mirá el precio y el envío, y cargalos acá. El precio de venta se recalcula con la regla del vigilante.</p>' +
+      '<div class="grilla-3" style="gap:12px"><div class="campo"><label for="costo-manual">Precio que ves en la publicación</label><input id="costo-manual" type="number" min="0" step="1" value="' + x.costo + '"></div>' +
+      '<label class="marca-check"><input type="checkbox" id="envio-manual"' + (x.envio.indexOf("Sin envío") < 0 ? " checked" : "") + "> Llega mañana con envío gratis</label></div>" +
+      '<p id="corregir-resultado"></p><div class="fila"><button type="button" class="btn fuerte" id="guardar-manual">Guardar</button><a class="btn" href="' + x.url + '" target="_blank" rel="noopener">Abrir la publicación</a>' +
+      '<button type="button" class="btn" id="cancelar-manual">Cancelar</button></div></div>';
+  }
+  function vistaPreviaCorregir() {
+    var x = proveedores[corrigiendo], c = Number(document.getElementById("costo-manual").value) || 0, salto = c / x.costo - 1;
+    document.getElementById("corregir-resultado").innerHTML = c === x.costo ? "Mismo precio que la última lectura." :
+      "Cambio de " + pct(salto * 100) + ". Precio de venta nuevo: <b>" + $(precioVenta(x, c)) + "</b>" + (Math.abs(salto) > .4 ? " (más de 40 %: queda para aprobar)" : "") + ".";
+  }
+
+  // ---------------- Sistema y Futuro ----------------
+  function pintarSistema() {
+    var items = [["Bot de la PC", "Funcionando", "Última vuelta hace 40 s · 3 fotos en paralelo", "Reiniciar"], ["Codex", "Disponible", "Restaura fotos y escribe letras", ""],
+      ["Claude", "Sesión iniciada", "Revisa letras con tu suscripción", ""], ["Real-ESRGAN", "Listo", "Placa de video, unos 7 s por foto", ""],
+      ["Servidor de la tienda", "En línea", "Mercado Pago, mails y revisión de clientes", ""], ["Vigilante de proveedores", "Leyó hace 12 min", "4 publicaciones, todas con envío mañana", ""],
+      ["API de Mercado Libre", "Autorizada", "Cuenta SEPE947626: cargos por venta y publicaciones", ""], ["Carpetas de pedidos", "En orden", "Lo entregado hace más de 30 días se borra solo", ""]];
+    principal.innerHTML = '<div class="cabeza"><h2>Sistema</h2><p class="suave">Si algo se cae, aparece primero en Hoy.</p></div><div class="grilla-3">' +
+      items.map(function (x) {
+        return '<div class="panel estado"><div class="cab"><h3>' + x[0] + '</h3><span class="pill ok"><span class="punto"></span>' + x[1] + '</span></div><p class="suave">' + x[2] + "</p>" +
+          (x[3] ? '<div><button type="button" class="btn" data-toast="El bot se reiniciaría (en la app real).">' + x[3] + "</button></div>" : "") + "</div>";
+      }).join("") + "</div>";
+  }
+  function pintarFuturo() {
+    principal.innerHTML =
+      '<div class="cabeza"><div><p class="etiqueta">Fase 4</p><h2>Mercado Libre y Meta</h2></div><p class="suave">Maqueta: todavía no hay publicaciones ni campañas, así que no hay datos.</p></div>' +
+      '<div class="panel tabla-caja" style="padding:0"><table><thead><tr><th>Publicación en ML</th><th class="num">Precio</th><th class="num">Visitas 7 días</th><th class="num">Ventas</th><th class="num">Cargo real por venta</th><th>Preguntas</th></tr></thead><tbody>' +
+      '<tr><td>Pack de 5 fotos restauradas</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>—</td></tr>' +
+      '<tr><td>Cuadro con tu foto restaurada 20x30</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>—</td></tr></tbody></table></div>' +
+      '<div class="panel tabla-caja" style="padding:0"><table><thead><tr><th>Campaña en Meta</th><th class="num">Gasto</th><th class="num">Ventas</th><th class="num">Costo por venta</th><th class="num">Vendido</th></tr></thead><tbody>' +
+      '<tr><td>Cuando conectes la cuenta publicitaria</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr></tbody></table></div>';
+  }
+
+  // ---------------- eventos ----------------
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest("button, a");
+    if (!b) return;
+    var t = activo >= 0 ? abiertos[activo] : null, i;
+    if (b.dataset.archivo) abrirArchivo(b.dataset.archivo);
+    else if (b.dataset.carpeta) { var x = archivoDe(b.dataset.carpeta); mostrarEnCarpeta(x.p, x.a); }
+    else if (b.dataset.pest !== undefined) { activo = Number(b.dataset.pest); pintar(); }
+    else if (b.dataset.cerrar !== undefined) cerrar(Number(b.dataset.cerrar));
+    else if (b.dataset.vista) ir(b.dataset.vista, true);
+    else if (b.dataset.ir) ir(b.dataset.ir, true);
+    else if (b.dataset.abrir) abrir(b.dataset.abrir);
+    else if (b.dataset.filtro) { filtro = b.dataset.filtro; pintarPedidos(); }
+    else if (b.dataset.pestana) {
+      pestana = b.dataset.pestana;
+      document.querySelectorAll(".pestanas button").forEach(function (x) { x.setAttribute("aria-selected", x.dataset.pestana === pestana); });
+      pintarPestana(buscarPedido(abierto));
+    } else if (b.dataset.toast) tostada(b.dataset.toast);
+    // proveedores
+    else if (b.id === "revisar-todos") {
+      proveedores.forEach(function (x) { x.leido = Date.now(); });
+      tostada("Leídas las " + proveedores.length + " publicaciones (en la app real lo hace el servidor en unos segundos). " + (proveedores.some(function (x) { return x.pendiente; }) ? "Queda un cambio para aprobar." : "Sin cambios."));
+      pintar();
+    } else if (b.dataset.revisar !== undefined) {
+      i = Number(b.dataset.revisar); proveedores[i].leido = Date.now();
+      tostada(proveedores[i].nombre + ": " + $(proveedores[i].pendiente || proveedores[i].costo) + ", «" + proveedores[i].envio + "».");
+      pintar();
+    } else if (b.dataset.corregir !== undefined) { corrigiendo = Number(b.dataset.corregir); pintar(); document.getElementById("costo-manual").focus(); }
+    else if (b.id === "cancelar-manual") { corrigiendo = -1; pintar(); }
+    else if (b.id === "guardar-manual") {
+      var x2 = proveedores[corrigiendo], c = Number(document.getElementById("costo-manual").value) || 0, gratis = document.getElementById("envio-manual").checked;
+      if (c <= 0) { tostada("Cargá el precio que ves en la publicación."); return; }
+      x2.envio = gratis ? "Llega gratis mañana (revisado a mano)" : "Sin envío gratis mañana (revisado a mano)";
+      x2.leido = Date.now();
+      if (Math.abs(c / x2.costo - 1) > .4) { x2.pendiente = c; x2.ejemplo = false; tostada("Guardado. Es un cambio de más de 40 %: queda para que lo apruebes arriba."); }
+      else if (c !== x2.costo) { var nuevo = precioVenta(x2, c); x2.historia = x2.historia.slice(1).concat(c); x2.costo = c; x2.vende = nuevo; x2.manual = true; tostada("Guardado. El precio de venta pasa a " + $(nuevo) + " en las dos webs (en la app real)."); }
+      else tostada("Guardado: el precio sigue igual.");
+      if (!gratis) tostada("Ojo: sin envío gratis mañana, el cuadro puede no llegar a tiempo. Te conviene mirar otro proveedor.");
+      corrigiendo = -1; pintar();
+    } else if (b.dataset.aprobar !== undefined) {
+      i = Number(b.dataset.aprobar); var p3 = proveedores[i], nv = precioVenta(p3, p3.pendiente);
+      p3.costo = p3.pendiente; p3.vende = nv; delete p3.pendiente;
+      tostada("Aprobado. " + p3.nombre + " se vende a " + $(nv) + " desde ahora (en la app real)."); pintar();
+    } else if (b.dataset.rechazar !== undefined) {
+      i = Number(b.dataset.rechazar); var p4 = proveedores[i];
+      p4.historia[p4.historia.length - 1] = p4.costo; delete p4.pendiente;
+      tostada("Rechazado. Se mantiene " + $(p4.vende) + " y la lectura queda marcada como error."); pintar();
+    }
+    // visor
+    else if (t && b.id === "guardar") { guardar(t); pintar(); }
+    else if (t && b.id === "descartar") { t.texto = null; t.sucio = false; t.aviso = null; pintar(); }
+    else if (t && b.id === "guardar-cerrar") { guardar(t); var aviso = t.aviso; cerrar(activo, true); tostada(aviso[0] + ". " + aviso[1]); }
+    else if (t && b.id === "descartar-cerrar") { t.texto = null; t.sucio = false; cerrar(activo, true); }
+    else if (t && b.id === "seguir") { t.cerrando = false; pintar(); }
+    else if (t && b.id === "zoom") { var f = document.getElementById("foto"); f.classList.toggle("real-tam"); b.textContent = f.classList.contains("real-tam") ? "Ajustar a la pantalla" : "Ver al 100 %"; }
+    else if (t && b.id === "agregar-nota") {
+      var n = document.getElementById("nota-historial").value.trim();
+      if (!n) { tostada("Escribí la nota primero."); return; }
+      t.p.historial.push([Date.now(), "Nota tuya: " + n]); t.aviso = ["Nota agregada", "Quedó al final del historial. El bot no hace nada con las notas."]; pintar();
+    }
+  });
+  function modo(plan) {
+    document.getElementById("prototipo").hidden = plan;
+    document.getElementById("plan").hidden = !plan;
+    document.getElementById("ver-plan").setAttribute("aria-pressed", plan);
+    document.getElementById("ver-prototipo").setAttribute("aria-pressed", !plan);
+    window.scrollTo(0, 0);
+  }
+  document.getElementById("ver-plan").addEventListener("click", function () { modo(true); });
+  document.getElementById("ver-prototipo").addEventListener("click", function () { modo(false); });
+  setInterval(function () { if (!abierto && activo < 0 && vista === "hoy") pintar(); }, 60000);   // los plazos corren solos
+
+  var inicial = (location.hash || "").replace("#", "");
+  if (inicial === "plan") modo(true);
+  ir(["hoy", "pedidos", "plata", "costos", "proveedores", "sistema", "futuro"].indexOf(inicial) >= 0 ? inicial : "hoy");
+})();
+</script>
