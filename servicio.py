@@ -22,11 +22,20 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 AQUI = pathlib.Path(__file__).resolve().parent
-TIENDA_DIR = AQUI.parents[0] / "tienda" / "herramientas"
 
-sys.path.insert(0, str(AQUI.parents[0] / "tienda"))
-sys.path.insert(0, str(TIENDA_DIR))
-sys.path.insert(0, str(AQUI.parents[0] / "produccion"))
+# Configuración dinámica de rutas para tienda y producción (soporta variables de entorno o carpetas hermanas)
+TIENDA_BASE = pathlib.Path(os.environ.get("TIENDA_DIR", AQUI.parents[0] / "tienda"))
+TIENDA_HERRAMIENTAS = pathlib.Path(os.environ.get("TIENDA_HERRAMIENTAS", TIENDA_BASE / "herramientas"))
+TIENDA_DIR = TIENDA_HERRAMIENTAS
+PRODUCCION_BASE = pathlib.Path(os.environ.get("PRODUCCION_DIR", AQUI.parents[0] / "produccion"))
+
+os.environ.setdefault("TIENDA_DIR", str(TIENDA_BASE))
+os.environ.setdefault("TIENDA_HERRAMIENTAS", str(TIENDA_HERRAMIENTAS))
+os.environ.setdefault("PRODUCCION_DIR", str(PRODUCCION_BASE))
+
+sys.path.insert(0, str(TIENDA_BASE))
+sys.path.insert(0, str(TIENDA_HERRAMIENTAS))
+sys.path.insert(0, str(PRODUCCION_BASE))
 sys.path.insert(0, str(AQUI))
 
 from app import catalogo  # noqa: E402
